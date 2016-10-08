@@ -72,7 +72,6 @@ public class UmaSharingServiceExt extends UmaSharingService{
     private final String clientId;
     private final String clientSecret;
 
-
     /**
      * Constructs an UmaSharingService bound to the given {@code authorizationServer} and dedicated to protect resource
      * sets described by the given {@code templates}.
@@ -96,11 +95,6 @@ public class UmaSharingServiceExt extends UmaSharingService{
         this.protectionApiHandler = protectionApiHandler;
         this.templates.addAll(templates);
         this.authorizationServer = appendTrailingSlash(authorizationServer);
-
-        // In case of top level realm
-        if (realm != null && realm.equals("/")) {
-            realm = "";
-        }
 
         this.introspectionEndpoint = authorizationServer.resolve("oauth2" + realm + "/introspect");
         this.ticketEndpoint = authorizationServer.resolve("uma" + realm + "/permission_request");
@@ -341,7 +335,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
         public Object create() throws HeapException {
             Handler handler = config.get("protectionApiHandler").required().as(requiredHeapObject(heap, Handler.class));
             URI uri = config.get("authorizationServerUri").as(evaluated()).required().as(uri());
-            String realm = config.get("realm").as(evaluated()).required().asString();
+            String realm = startsWithSlash(config.get("realm").defaultTo("/").asString());
             String clientId = config.get("clientId").as(evaluated()).required().asString();
             String clientSecret = config.get("clientSecret").as(evaluated()).required().asString();
             try {
@@ -359,6 +353,11 @@ public class UmaSharingServiceExt extends UmaSharingService{
             } catch (URISyntaxException e) {
                 throw new HeapException("Cannot build UmaSharingService", e);
             }
+        }
+
+        private static String startsWithSlash(final String realm) {
+            String nonNullRealm = realm != null ? realm : "/";
+            return nonNullRealm.startsWith("/") ? nonNullRealm : "/" + nonNullRealm;
         }
 
         private List<ShareTemplate> createResourceTemplates() throws HeapException {

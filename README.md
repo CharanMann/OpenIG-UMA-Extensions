@@ -1,9 +1,9 @@
 # OpenIG-UMA-Extensions
 
 *OpenIG UMA Extensions for: 
-1. Realm support 
-2. Extend OpenIG-UMA REST endpoint 
-3. User friendly UMA Resource name 
+1. Realm support <br />
+2. Extend OpenIG-UMA REST endpoint <br /> 
+3. User friendly UMA Resource name <br />
 *
 
 Work in progress ...

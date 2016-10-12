@@ -26,7 +26,7 @@ import org.forgerock.http.protocol.Response;
 import org.forgerock.http.protocol.Responses;
 import org.forgerock.http.protocol.Status;
 import org.forgerock.json.JsonValue;
-import org.forgerock.json.JsonValueException;
+import org.forgerock.json.resource.CreateRequest;
 import org.forgerock.openig.heap.GenericHeaplet;
 import org.forgerock.openig.heap.HeapException;
 import org.forgerock.openig.http.EndpointRegistry;
@@ -43,23 +43,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
-import static org.forgerock.json.JsonValue.field;
-import static org.forgerock.json.JsonValue.json;
-import static org.forgerock.json.JsonValue.object;
-import static org.forgerock.json.JsonValueFunctions.listOf;
-import static org.forgerock.json.JsonValueFunctions.pattern;
+import static org.forgerock.json.JsonValue.*;
 import static org.forgerock.json.JsonValueFunctions.uri;
 import static org.forgerock.json.resource.Resources.newCollection;
 import static org.forgerock.json.resource.http.CrestHttp.newHttpHandler;
 import static org.forgerock.openig.util.JsonValues.evaluated;
-import static org.forgerock.openig.util.JsonValues.expression;
 import static org.forgerock.openig.util.JsonValues.requiredHeapObject;
 import static org.forgerock.util.promise.Promises.newExceptionPromise;
 
 /**
  * Extension of {@code UmaSharingService}. Adds: Support for realm
  */
-public class UmaSharingServiceExt extends UmaSharingService{
+public class UmaSharingServiceExt extends UmaSharingService {
 
     private final List<ShareTemplate> templates = new ArrayList<>();
     private final Map<String, Share> shares = new TreeMap<>();
@@ -72,12 +67,12 @@ public class UmaSharingServiceExt extends UmaSharingService{
     private final String clientId;
     private final String clientSecret;
 
+
     /**
      * Constructs an UmaSharingService bound to the given {@code authorizationServer} and dedicated to protect resource
      * sets described by the given {@code templates}.
      *
      * @param protectionApiHandler used to call the resource set endpoint
-     * @param templates            list of resource descriptions
      * @param authorizationServer  Bound UMA Authorization Server
      * @param clientId             OAuth 2.0 Client identifier
      * @param clientSecret         OAuth 2.0 Client secret
@@ -85,12 +80,11 @@ public class UmaSharingServiceExt extends UmaSharingService{
      */
     public UmaSharingServiceExt(final Handler protectionApiHandler,
                                 String realm,
-                                final List<ShareTemplate> templates,
                                 final URI authorizationServer,
                                 final String clientId,
                                 final String clientSecret)
             throws URISyntaxException {
-        super(protectionApiHandler, templates, authorizationServer,
+        super(protectionApiHandler, Collections.<ShareTemplate>emptyList(), authorizationServer,
                 clientId, clientSecret);
         this.protectionApiHandler = protectionApiHandler;
         this.templates.addAll(templates);
@@ -106,8 +100,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
     /**
      * Append a trailing {@literal /} if missing.
      *
-     * @param uri
-     *         URI to be "normalized"
+     * @param uri URI to be "normalized"
      * @return a URI with a trailing {@literal /}
      * @throws URISyntaxException should never happen
      */
@@ -123,19 +116,20 @@ public class UmaSharingServiceExt extends UmaSharingService{
     /**
      * Creates a Share that will be used to protect the given {@code resourcePath}.
      *
-     * @param context
-     *         Context chain used to keep a relationship between requests (tracking)
-     * @param resourcePath
-     *         resource to be protected
-     * @param pat
-     *         Protection Api Token (PAT)
+     * @param context       Context chain used to keep a relationship between requests (tracking)
+     * @param createRequest CreateRequest
      * @return the created {@link Share} asynchronously
      * @see <a href="https://docs.kantarainitiative.org/uma/draft-oauth-resource-reg.html#rfc.section.2">Resource Set
      * Registration</a>
      */
     public Promise<Share, UmaException> createShare(final Context context,
-                                                    final String resourcePath,
-                                                    final String pat) {
+                                                    final CreateRequest createRequest) {
+
+        final String resourcePath = createRequest.getContent().get("path").asString();
+        final String pat = createRequest.getContent().get("pat").asString();
+        String name = createRequest.getContent().get("name").asString();
+        String type = createRequest.getContent().get("type").asString();
+        Set<Object> scopes = createRequest.getContent().get("scopes").asSet();
 
         if (isShared(resourcePath)) {
             // We do not accept re-sharing or post-creation resource_set configuration
@@ -143,49 +137,29 @@ public class UmaSharingServiceExt extends UmaSharingService{
         }
 
         // Need to find which ShareTemplate to use
-        final ShareTemplate matching = findShareTemplate(resourcePath);
+        //final ShareTemplate matching = findShareTemplate(resourcePath);
 
-        if (matching == null) {
-            return newExceptionPromise(new UmaException(format("Can't find a template for resource %s", resourcePath)));
-        }
+        //if (matching == null) {
+        //  return newExceptionPromise(new UmaException(format("Can't find a template for resource %s", resourcePath)));
+        //}
 
-        return createResourceSet(context, matching, resourcePath, pat)
+        return createResourceSet(context, pat, resourceSet(name, scopes, type))
                 .then(new Function<Response, Share, UmaException>() {
                     @Override
                     public Share apply(final Response response) throws UmaException {
                         if (response.getStatus() == Status.CREATED) {
                             try {
                                 JsonValue value = json(response.getEntity().getJson());
-                                Share share = new Share(matching, value, Pattern.compile(resourcePath), pat);
+                                Share share = new Share(null, value, Pattern.compile(resourcePath), pat);
                                 shares.put(share.getId(), share);
                                 return share;
                             } catch (IOException e) {
                                 throw new UmaException("Can't read the CREATE resource_set response", e);
                             }
                         }
-                        throw new UmaException("Cannot register resource_set in AS");
+                        throw new UmaException("Cannot register resource_set in AS: " + response.getEntity());
                     }
                 }, Responses.<Share, UmaException>noopExceptionFunction());
-    }
-
-    /**
-     * Select, among the registered templates, the one that match best the resource path to be shared.
-     *
-     * @param resourcePath
-     *         path of the resource to be shared
-     * @return the best match, or {@code null} if no match have been found
-     */
-    private ShareTemplate findShareTemplate(final String resourcePath) {
-        ShareTemplate matching = null;
-        int longest = -1;
-        for (ShareTemplate template : templates) {
-            Matcher matcher = template.getPattern().matcher(resourcePath);
-            if (matcher.matches() && (matcher.end() > longest)) {
-                matching = template;
-                longest = matcher.end();
-            }
-        }
-        return matching;
     }
 
     private boolean isShared(final String path) {
@@ -198,38 +172,31 @@ public class UmaSharingServiceExt extends UmaSharingService{
     }
 
     private Promise<Response, NeverThrowsException> createResourceSet(final Context context,
-                                                                      final ShareTemplate template,
-                                                                      final String path,
-                                                                      final String pat) {
+                                                                      final String pat,
+                                                                      final JsonValue data
+    ) {
         Request request = new Request();
         request.setMethod("POST");
         request.setUri(resourceSetEndpoint);
         request.getHeaders().put("Authorization", format("Bearer %s", pat));
         request.getHeaders().put("Accept", "application/json");
 
-        request.setEntity(resourceSet(path, template).asMap());
+        request.setEntity(data.asMap());
 
         return protectionApiHandler.handle(context, request);
     }
 
-    private JsonValue resourceSet(final String name, final ShareTemplate template) {
-        return json(object(field("name", uniqueName(name)),
-                field("scopes", template.getAllScopes())));
-    }
-
-    private String uniqueName(final String name) {
-        // TODO this is a workaround until we have persistence on the OpenIG side
-        return format("%s @ %d", name, System.currentTimeMillis());
+    private JsonValue resourceSet(final String name, final Set<Object> scopes, final String type) {
+        return json(object(field("name", name),
+                field("scopes", scopes), field("type", type)));
     }
 
     /**
      * Find a {@link Share}.
      *
-     * @param request
-     *         the incoming requesting party request
+     * @param request the incoming requesting party request
      * @return a {@link Share} to be used to protect the resource access
-     * @throws UmaException
-     *         when no {@link Share} can handle the request.
+     * @throws UmaException when no {@link Share} can handle the request.
      */
     public Share findShare(Request request) throws UmaException {
 
@@ -261,8 +228,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
      * Removes the previously created Share from the registered shares. In effect, the resources is no more
      * shared/protected
      *
-     * @param shareId
-     *         share identifier
+     * @param shareId share identifier
      * @return the removed Share instance if found, {@code null} otherwise.
      */
     public Share removeShare(String shareId) {
@@ -271,6 +237,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
 
     /**
      * Returns a copy of the list of currently managed shares.
+     *
      * @return a copy of the list of currently managed shares.
      */
     public Set<Share> listShares() {
@@ -279,6 +246,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
 
     /**
      * Returns the UMA authorization server base Uri.
+     *
      * @return the UMA authorization server base Uri.
      */
     public URI getAuthorizationServer() {
@@ -287,6 +255,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
 
     /**
      * Returns the UMA Permission Request endpoint Uri.
+     *
      * @return the UMA Permission Request endpoint Uri.
      */
     public URI getTicketEndpoint() {
@@ -295,6 +264,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
 
     /**
      * Returns the OAuth 2.0 Introspection endpoint Uri.
+     *
      * @return the OAuth 2.0 Introspection endpoint Uri.
      */
     public URI getIntrospectionEndpoint() {
@@ -303,6 +273,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
 
     /**
      * Returns the {@link Share} with the given {@code id}.
+     *
      * @param id Share identifier
      * @return the {@link Share} with the given {@code id} (or {@code null} if none was found).
      */
@@ -312,6 +283,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
 
     /**
      * Returns the client identifier used to identify this RS as an OAuth 2.0 client.
+     *
      * @return the client identifier used to identify this RS as an OAuth 2.0 client.
      */
     public String getClientId() {
@@ -320,6 +292,7 @@ public class UmaSharingServiceExt extends UmaSharingService{
 
     /**
      * Returns the client secret.
+     *
      * @return the client secret.
      */
     public String getClientSecret() {
@@ -331,6 +304,11 @@ public class UmaSharingServiceExt extends UmaSharingService{
      */
     public static class Heaplet extends GenericHeaplet {
 
+        private static String startsWithSlash(final String realm) {
+            String nonNullRealm = realm != null ? realm : "/";
+            return nonNullRealm.startsWith("/") ? nonNullRealm : "/" + nonNullRealm;
+        }
+
         @Override
         public Object create() throws HeapException {
             Handler handler = config.get("protectionApiHandler").required().as(requiredHeapObject(heap, Handler.class));
@@ -340,12 +318,11 @@ public class UmaSharingServiceExt extends UmaSharingService{
             String clientSecret = config.get("clientSecret").as(evaluated()).required().asString();
             try {
                 UmaSharingServiceExt service = new UmaSharingServiceExt(handler, realm,
-                        createResourceTemplates(),
                         uri,
                         clientId,
                         clientSecret);
                 // register admin endpoint
-                Handler httpHandler = newHttpHandler(newCollection(new ShareCollectionProvider(service)));
+                Handler httpHandler = newHttpHandler(newCollection(new ShareCollectionProviderExt(service)));
                 EndpointRegistry.Registration share = endpointRegistry().register("share", httpHandler);
                 logger.info(format("UMA Share endpoint available at '%s'", share.getPath()));
 
@@ -355,32 +332,6 @@ public class UmaSharingServiceExt extends UmaSharingService{
             }
         }
 
-        private static String startsWithSlash(final String realm) {
-            String nonNullRealm = realm != null ? realm : "/";
-            return nonNullRealm.startsWith("/") ? nonNullRealm : "/" + nonNullRealm;
-        }
-
-        private List<ShareTemplate> createResourceTemplates() throws HeapException {
-            return config.get("resources")
-                    .required()
-                    .as(listOf(new Function<JsonValue, ShareTemplate, HeapException>() {
-                        @Override
-                        public ShareTemplate apply(final JsonValue value) throws HeapException {
-                            return new ShareTemplate(value.get("pattern").required().as(pattern()),
-                                    actions(value.get("actions").expect(List.class)));
-                        }
-                    }));
-        }
-
-        private List<ShareTemplate.Action> actions(final JsonValue actions) {
-            return actions.as(listOf(new Function<JsonValue, ShareTemplate.Action, JsonValueException>() {
-                @Override
-                public ShareTemplate.Action apply(final JsonValue value) {
-                    return new ShareTemplate.Action(value.get("condition").required().as(expression(Boolean.class)),
-                            value.get("scopes").as(evaluated()).asSet(String.class));
-                }
-            }));
-        }
     }
 
 }

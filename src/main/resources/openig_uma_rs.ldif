@@ -1,0 +1,191 @@
+Last login: Tue Oct 11 14:41:41 on ttys001
+FR-MacBook-Pro:~ charanmann$ sudo ssh forgerock@192.168.56.122
+forgerock@192.168.56.122's password:
+Welcome to Ubuntu 14.04.5 LTS (GNU/Linux 3.19.0-69-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com/
+
+118 packages can be updated.
+71 updates are security updates.
+
+
+WARNING: Security updates for your current Hardware Enablement Stack
+ended on 2016-08-04:
+ * http://wiki.ubuntu.com/1404_HWE_EOL
+
+To upgrade to a supported (or longer-supported) configuration:
+
+* Upgrade from Ubuntu 14.04 LTS to Ubuntu 16.04 LTS by running:
+sudo do-release-upgrade
+
+OR
+
+* Switch to the current security-supported stack by running:
+sudo apt-get install xserver-xorg-lts-xenial libwayland-egl1-mesa-lts-xenial libgl1-mesa-glx-lts-xenial
+
+and reboot your system.
+Last login: Tue Oct 11 14:42:03 2016 from 192.168.56.1
+forgerock@openam13_5:~$
+forgerock@openam13_5:~$
+forgerock@openam13_5:~$
+forgerock@openam13_5:~$
+forgerock@openam13_5:~$ cd /opt/forgerock/OpenAM1/webapps/openam/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam$ ll
+total 248
+drwxrwxr-x 22 forgerock forgerock  4096 Jul 14 09:04 ./
+drwxr-xr-x  8 forgerock forgerock  4096 Jul 14 09:04 ../
+drwxrwxr-x  7 forgerock forgerock  4096 Jul 14 09:04 assets/
+drwxrwxr-x  7 forgerock forgerock  4096 Jul 14 09:04 click/
+drwxrwxr-x  8 forgerock forgerock  4096 Jul 14 09:04 com_sun_web_ui/
+drwxrwxr-x  6 forgerock forgerock  4096 Jul 14 09:04 config/
+drwxrwxr-x 26 forgerock forgerock  4096 Jul 14 09:04 console/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 css/
+-rw-rw-r--  1 forgerock forgerock 14800 Jul 13 08:54 Debug.jsp
+-rw-rw-r--  1 forgerock forgerock  4084 Jul 13 08:54 encode.jsp
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 fed_css/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 fed_images/
+-rw-rw-r--  1 forgerock forgerock  7413 Jul 13 08:54 getServerInfo.jsp
+drwxrwxr-x  3 forgerock forgerock  4096 Jul 14 09:04 images/
+-rw-rw-r--  1 forgerock forgerock  1626 Jul 13 08:54 index.html
+-rw-rw-r--  1 forgerock forgerock    85 Jul 13 08:54 index.jsp
+-rw-rw-r--  1 forgerock forgerock  2451 Jul 13 08:54 isAlive.jsp
+drwxrwxr-x  3 forgerock forgerock  4096 Jul 14 09:04 js/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 legal-notices/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 login_images/
+drwxrwxr-x  3 forgerock forgerock  4096 Jul 14 09:04 META-INF/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 oauth2/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 oauth2c/
+drwxrwxr-x  7 forgerock forgerock  4096 Jul 14 09:04 password/
+-rw-rw-r--  1 forgerock forgerock  1380 Jul 13 08:54 postRedirect.jsp
+-rw-rw-r--  1 forgerock forgerock  4761 Jul 13 08:54 proxyidpfinder.jsp
+drwxrwxr-x  3 forgerock forgerock  4096 Jul 14 09:04 saml2/
+-rw-rw-r--  1 forgerock forgerock 12866 Jul 13 08:54 services.jsp
+-rw-rw-r--  1 forgerock forgerock 10408 Jul 13 08:54 showServerConfig.jsp
+-rw-rw-r--  1 forgerock forgerock  1424 Jul 13 08:54 side-bg.gif
+-rw-rw-r--  1 forgerock forgerock  3946 Jul 13 08:54 ssoadm.jsp
+-rw-rw-r--  1 forgerock forgerock  1597 Jul 13 08:54 sunLogo.gif
+-rw-rw-r--  1 forgerock forgerock  2378 Jul 13 08:54 validateWait.jsp
+-rw-rw-r--  1 forgerock forgerock  3269 Jul 13 08:54 validatorAuthFail.jsp
+-rw-rw-r--  1 forgerock forgerock  2687 Jul 13 08:54 validatorFooter.jsp
+-rw-rw-r--  1 forgerock forgerock 27117 Jul 13 08:54 validator.jsp
+-rw-rw-r--  1 forgerock forgerock  8883 Jul 13 08:54 validatorMain.jsp
+-rw-rw-r--  1 forgerock forgerock 10457 Jul 13 08:54 validatorRpt.jsp
+-rw-rw-r--  1 forgerock forgerock  2304 Jul 13 08:54 validatorStatus.jsp
+drwxrwxr-x 10 forgerock forgerock  4096 Oct  6 14:51 WEB-INF/
+drwxrwxr-x  4 forgerock forgerock  4096 Jul 14 09:04 wsfederation/
+drwxrwxr-x 11 forgerock forgerock  4096 Jul 14 09:04 XUI/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam$ cd WEB-INF/
+classes/        com_sun_web_ui/ fedlet/         jsp/            lib/            tags/           template/       wsdl/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam$ cd WEB-INF/template/
+elasticsearch/ keystore/      ldif/          opendj/        openfm/        sms/           sql/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam$ cd WEB-INF/template/ldif/
+
+▽
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/ldif$ ll
+total 40
+drwxrwxr-x 9 forgerock forgerock 4096 Jul 14 09:04 ./
+drwxrwxr-x 9 forgerock forgerock 4096 Jul 14 09:04 ../
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 ad/
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 adam/
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 common/
+drwxrwxr-x 3 forgerock forgerock 4096 Jul 14 09:04 odsee/
+drwxrwxr-x 2 forgerock forgerock 4096 Sep 28 09:45 opendj/
+-rw-rw-r-- 1 forgerock forgerock 2673 Jul 13 08:54 README
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 sfha/
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 tivoli/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/ldif$ cd opendj/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/ldif/opendj$ ll
+total 120
+drwxrwxr-x 2 forgerock forgerock  4096 Sep 28 09:45 ./
+drwxrwxr-x 9 forgerock forgerock  4096 Jul 14 09:04 ../
+-rw-rw-r-- 1 forgerock forgerock  1671 Jul 13 08:54 oath_2fa.ldif
+-rw-rw-r-- 1 forgerock forgerock  1104 Jul 13 08:54 opendj_aci_lift_user_password_restriction.ldif
+-rw-rw-r-- 1 forgerock forgerock  1095 Jul 13 08:54 opendj_aci_remove_blanket_deny_all.ldif
+-rw-rw-r-- 1 forgerock forgerock  2231 Jul 13 08:54 opendj_config_schema.ldif
+-rw-rw-r-- 1 forgerock forgerock  1247 Jul 13 08:54 opendj_dashboard.ldif
+-rw-rw-r-- 1 forgerock forgerock  1331 Jul 13 08:54 opendj_deviceprint.ldif
+-rw-rw-r-- 1 forgerock forgerock  1931 Jul 13 08:54 opendj_embinit.ldif
+-rw-rw-r-- 1 forgerock forgerock  1511 Jul 13 08:54 opendj_kba.ldif
+-rw-rw-r-- 1 forgerock forgerock  1296 Jul 13 08:54 opendj_oathdevices.ldif
+-rw-rw-r-- 1 forgerock forgerock  1296 Jul 13 08:54 opendj_pushdevices.ldif
+-rw-rw-r-- 1 forgerock forgerock  3331 Jul 13 08:54 opendj_remove_config_schema.ldif
+-rw-rw-r-- 1 forgerock forgerock 18050 Jul 13 08:54 opendj_remove_user_schema.ldif
+-rw-rw-r-- 1 forgerock forgerock   993 Jul 13 08:54 opendj_uma_audit.ldif
+-rw-rw-r-- 1 forgerock forgerock  1925 Jul 13 08:54 opendj_uma_labels_schema.ldif
+-rw-rw-r-- 1 forgerock forgerock   986 Jul 13 08:54 opendj_uma_pending_requests.ldif
+-rw-rw-r-- 1 forgerock forgerock   992 Jul 13 08:54 opendj_uma_resource_set_labels.ldif
+-rw-rw-r-- 1 forgerock forgerock  1001 Jul 13 08:54 opendj_uma_resource_sets.ldif
+-rw-rw-r-- 1 forgerock forgerock   945 Jul 13 08:54 opendj_user_index.ldif
+-rw-rw-r-- 1 forgerock forgerock  2110 Jul 13 08:54 opendj_userinit.ldif
+-rw-rw-r-- 1 forgerock forgerock 18040 Jul 13 08:54 opendj_user_schema.ldif
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/ldif/opendj$ vi opendj_uma_resource_set
+opendj_uma_resource_set_labels.ldif  opendj_uma_resource_sets.ldif
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/ldif/opendj$ vi opendj_uma_resource_sets.ldif
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/ldif/opendj$ cd ..
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/ldif$ ll
+total 40
+drwxrwxr-x 9 forgerock forgerock 4096 Jul 14 09:04 ./
+drwxrwxr-x 9 forgerock forgerock 4096 Jul 14 09:04 ../
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 ad/
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 adam/
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 common/
+drwxrwxr-x 3 forgerock forgerock 4096 Jul 14 09:04 odsee/
+drwxrwxr-x 2 forgerock forgerock 4096 Oct 11 14:53 opendj/
+-rw-rw-r-- 1 forgerock forgerock 2673 Jul 13 08:54 README
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 sfha/
+drwxrwxr-x 2 forgerock forgerock 4096 Jul 14 09:04 tivoli/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/ldif$ cd ..
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template$ ll
+total 56
+drwxrwxr-x  9 forgerock forgerock  4096 Jul 14 09:04 ./
+drwxrwxr-x 10 forgerock forgerock  4096 Oct  6 14:51 ../
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 elasticsearch/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 keystore/
+drwxrwxr-x  9 forgerock forgerock  4096 Jul 14 09:04 ldif/
+-rw-rw-r--  1 forgerock forgerock 17003 Jul 13 08:54 license.txt
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 opendj/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 openfm/
+drwxrwxr-x  2 forgerock forgerock  4096 Jul 14 09:04 sms/
+drwxrwxr-x  4 forgerock forgerock  4096 Jul 14 09:04 sql/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template$ cd opendj/
+forgerock@openam13_5:/opt/forgerock/OpenAM1/webapps/openam/WEB-INF/template/opendj$ ll
+total 24332
+drwxrwxr-x 2 forgerock forgerock     4096 Jul 14 09:04 ./
+drwxrwxr-x 9 forgerock forgerock     4096 Jul 14 09:04 ../
+
+▽
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+#
+# Copyright 2015 ForgeRock AS.
+#
+# The contents of this file are subject to the terms
+# of the Common Development and Distribution License
+# (the License). You may not use this file except in
+# compliance with the License.
+#
+# You can obtain a copy of the License at
+# http://forgerock.org/license/CDDLv1.0.html
+# See the License for the specific language governing
+# permission and limitations under the License.
+#
+# When distributing Covered Code, include this CDDL
+# Header Notice in each file and include the License file
+# at http://forgerock.org/license/CDDLv1.0.html
+# If applicable, add the following below the CDDL Header,
+# with the fields enclosed by brackets [] replaced by
+# your own identifying information:
+# "Portions Copyrighted [year] [name of copyright owner]"
+#
+
+dn: cn=schema
+changetype: modify
+add: attributeTypes
+# UMA Label Schema Attributes
+attributeTypes: ( 1.3.6.1.4.1.36733.2.2.1.132 NAME ( 'umaLabelId' ) DESC 'UMA Label ID' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE X-ORIGIN 'ForgeRock OpenIG UMA' )
+attributeTypes: ( 1.3.6.1.4.1.36733.2.2.1.133 NAME ( 'umaLabelType' ) DESC 'UMA Label type' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE X-ORIGIN 'ForgeRock OpenIG UMA' )
+attributeTypes: ( 1.3.6.1.4.1.36733.2.2.1.134 NAME ( 'umaLabelName' ) DESC 'UMA Label name' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE X-ORIGIN 'ForgeRock OpenIG UMA' )
+attributeTypes: ( 1.3.6.1.4.1.36733.2.2.1.135 NAME ( 'umaLabelResourceSet' ) DESC 'UMA Label resource set ID' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 X-ORIGIN 'ForgeRock OpenIG UMA' )
+-
+add: objectclasses
+# UMA Label Object
+objectClasses: ( 1.3.6.1.4.1.36733.2.2.2.28 NAME 'frUmaLabel' DESC 'object containing ForgeRock UMA Resource Set Label' SUP top STRUCTURAL MUST ( umaLabelId $ umaLabelType ) MAY ( umaLabelName $ umaLabelResourceSet ) X-ORIGIN 'ForgeRock OpenIG UMA' )

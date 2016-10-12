@@ -47,12 +47,14 @@ public class LDAPManager {
      * @param share
      */
     void addShare(Share share) throws LdapException {
-        String entryDN = "documentidentifier=,ou=AppConfig,dc=example,dc=com";
+        String entryDN = "umaResourceId=" + share.getId() + "," + baseDN;
         Entry entry = new LinkedHashMapEntry(entryDN)
                 .addAttribute("objectclass", "top")
-                .addAttribute("objectclass", "document")
-                .addAttribute("documentIdentifier", resourceSetId)
-                .addAttribute("documentTitle", pat);
+                .addAttribute("objectclass", "frUmaRS")
+                .addAttribute("umaResourceSetId", share.getResourceSetId())
+                .addAttribute("umaResourceURI", share.getPattern())
+                .addAttribute("umaResoucePAT", share.getPAT())
+                .addAttribute("umaResourcePolicyURL", share.getUserAccessPolicyUri());
 
         ldapConnection.add(entry);
     }

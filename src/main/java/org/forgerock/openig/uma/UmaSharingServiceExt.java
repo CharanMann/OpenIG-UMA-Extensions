@@ -56,7 +56,6 @@ import static org.forgerock.util.promise.Promises.newExceptionPromise;
  */
 public class UmaSharingServiceExt extends UmaSharingService {
 
-    private final List<ShareTemplate> templates = new ArrayList<>();
     private final Map<String, Share> shares = new TreeMap<>();
 
     private final Handler protectionApiHandler;
@@ -66,6 +65,7 @@ public class UmaSharingServiceExt extends UmaSharingService {
     private final URI resourceSetEndpoint;
     private final String clientId;
     private final String clientSecret;
+    private LDAPManager ldapManager;
 
 
     /**
@@ -82,12 +82,12 @@ public class UmaSharingServiceExt extends UmaSharingService {
                                 String realm,
                                 final URI authorizationServer,
                                 final String clientId,
-                                final String clientSecret)
+                                final String clientSecret,
+                                final LDAPManager ldapManager)
             throws URISyntaxException {
         super(protectionApiHandler, Collections.<ShareTemplate>emptyList(), authorizationServer,
                 clientId, clientSecret);
         this.protectionApiHandler = protectionApiHandler;
-        this.templates.addAll(templates);
         this.authorizationServer = appendTrailingSlash(authorizationServer);
 
         this.introspectionEndpoint = authorizationServer.resolve("oauth2" + realm + "/introspect");
@@ -95,6 +95,7 @@ public class UmaSharingServiceExt extends UmaSharingService {
         this.resourceSetEndpoint = authorizationServer.resolve("oauth2" + realm + "/resource_set");
         this.clientId = clientId;
         this.clientSecret = clientSecret;
+        this.ldapManager = ldapManager;
     }
 
     /**
@@ -151,6 +152,7 @@ public class UmaSharingServiceExt extends UmaSharingService {
                             try {
                                 JsonValue value = json(response.getEntity().getJson());
                                 Share share = new Share(null, value, Pattern.compile(resourcePath), pat);
+                                ldapManager.addShare(share);
                                 shares.put(share.getId(), share);
                                 return share;
                             } catch (IOException e) {
@@ -316,11 +318,13 @@ public class UmaSharingServiceExt extends UmaSharingService {
             String realm = startsWithSlash(config.get("realm").defaultTo("/").asString());
             String clientId = config.get("clientId").as(evaluated()).required().asString();
             String clientSecret = config.get("clientSecret").as(evaluated()).required().asString();
+            LDAPManager ldapManager = new LDAPManager("192.168.56.122", 3389, "cn=Directory Manager", "cangetindj", "dc=openig,dc=forgerock,dc=org");
             try {
                 UmaSharingServiceExt service = new UmaSharingServiceExt(handler, realm,
                         uri,
                         clientId,
-                        clientSecret);
+                        clientSecret,
+                        ldapManager);
                 // register admin endpoint
                 Handler httpHandler = newHttpHandler(newCollection(new ShareCollectionProviderExt(service)));
                 EndpointRegistry.Registration share = endpointRegistry().register("share", httpHandler);

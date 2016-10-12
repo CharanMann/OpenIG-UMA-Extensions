@@ -1,0 +1,39 @@
+{
+  "heap": [
+    {
+      "name": "UmaServiceExt",
+      "type": "UmaServiceExt",
+      "config": {
+        "protectionApiHandler": "ClientHandler",
+        "authorizationServerUri": "http://openam135.sample.com:8080/openam/",
+	    "realm": "/employees",
+        "clientId": "OpenIG_RS",
+        "clientSecret": "password"
+      }
+    }
+  ],
+  "handler": {
+    "type": "Chain",
+    "config": {
+      "filters": [
+        {
+          "type": "ScriptableFilter",
+          "config": {
+            "type": "application/x-groovy",
+            "file": "CorsFilter.groovy"
+          }
+        },
+        {
+          "type": "UmaFilter",
+          "config": {
+            "protectionApiHandler": "ClientHandler",
+            "umaService": "UmaServiceExt"
+          }
+        }
+      ],
+      "handler": "ClientHandler"
+    }
+  },
+  "baseURI": "http://docapp45.sample.com:8081",
+  "condition": "${request.uri.host == 'docapp45-ig.sample.com'}"
+}

@@ -22,21 +22,24 @@ package org.forgerock.openig.uma;
 import org.forgerock.opendj.ldap.Entry;
 import org.forgerock.opendj.ldap.LdapException;
 import org.forgerock.opendj.ldap.LinkedHashMapEntry;
+import org.forgerock.opendj.ldap.SearchScope;
 import org.forgerock.openig.ldap.LdapClient;
 import org.forgerock.openig.ldap.LdapConnection;
 
 public class LDAPManager {
 
     private LdapConnection ldapConnection;
+    private LdapClient ldapClient;
     private String baseDN;
 
     public LDAPManager(String hostname, int port, String userName, String password, String baseDN) {
         try {
-            LdapClient ldapClient = LdapClient.getInstance();
+            this.ldapClient = LdapClient.getInstance();
             this.ldapConnection = ldapClient.connect(hostname, port);
             this.ldapConnection.bind(userName, password.toCharArray());
             this.baseDN = baseDN;
         } catch (Exception e) {
+            e.printStackTrace();
             //TODO eating exception for now
         }
     }
@@ -46,16 +49,36 @@ public class LDAPManager {
      *
      * @param share
      */
-    void addShare(Share share) throws LdapException {
+    void addShare(ShareExt share) throws LdapException {
         String entryDN = "umaResourceId=" + share.getId() + "," + baseDN;
         Entry entry = new LinkedHashMapEntry(entryDN)
                 .addAttribute("objectclass", "top")
                 .addAttribute("objectclass", "frUmaRS")
                 .addAttribute("umaResourceSetId", share.getResourceSetId())
-                .addAttribute("umaResourceURI", share.getPattern())
-                .addAttribute("umaResoucePAT", share.getPAT())
-                .addAttribute("umaResourcePolicyURL", share.getUserAccessPolicyUri());
+                .addAttribute("umaResourceURI", share.getRequestURI())
+                .addAttribute("umaResoucePAT", share.getPat())
+                .addAttribute("umaResourcePolicyURL", share.getPolicyURL());
 
         ldapConnection.add(entry);
+    }
+
+    /**
+     * Gets the ShareExt matching the requestURI
+     *
+     * @param requestURI
+     * @return ShareExt
+     * @throws LdapException
+     */
+    ShareExt getShare(String requestURI) throws LdapException {
+        String filter = ldapClient.filter("(umaResourceURI=%s)", requestURI);
+
+        Entry resultEntry = ldapConnection.searchSingleEntry(baseDN, SearchScope.WHOLE_SUBTREE, filter);
+        String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
+        String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
+        String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
+        String policyURL = resultEntry.getAttribute("umaResourcePolicyURL").firstValueAsString();
+        ShareExt share = new ShareExt(rId, pat, requestURI, policyURL);
+        share.setId(id);
+        return share;
     }
 }

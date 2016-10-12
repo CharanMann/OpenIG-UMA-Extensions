@@ -42,11 +42,11 @@ public class ShareCollectionProviderExt extends ShareCollectionProvider {
         this.service = service;
     }
 
-    private static JsonValue asJson(final Share share) {
+    private static JsonValue asJson(final ShareExt share) {
         return json(object(field("id", share.getId()),
-                field("pattern", share.getPattern().pattern()),
-                field("user_access_policy_uri", share.getUserAccessPolicyUri()),
-                field("pat", share.getPAT()),
+                field("resourceURI", share.getRequestURI()),
+                field("user_access_policy_uri", share.getPolicyURL()),
+                field("pat", share.getPat()),
                 field("resource_set_id", share.getResourceSetId())));
     }
 
@@ -58,9 +58,9 @@ public class ShareCollectionProviderExt extends ShareCollectionProvider {
         }
 
         return service.createShare(context, request)
-                .then(new Function<Share, ResourceResponse, ResourceException>() {
+                .then(new Function<ShareExt, ResourceResponse, ResourceException>() {
                     @Override
-                    public ResourceResponse apply(final Share share) throws ResourceException {
+                    public ResourceResponse apply(final ShareExt share) throws ResourceException {
                         return newResourceResponse(share.getId(), null, asJson(share));
                     }
                 }, new Function<UmaException, ResourceResponse, ResourceException>() {

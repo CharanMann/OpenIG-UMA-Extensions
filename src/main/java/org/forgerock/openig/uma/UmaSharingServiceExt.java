@@ -27,6 +27,8 @@ import org.forgerock.http.protocol.Responses;
 import org.forgerock.http.protocol.Status;
 import org.forgerock.json.JsonValue;
 import org.forgerock.json.resource.CreateRequest;
+import org.forgerock.opendj.ldap.EntryNotFoundException;
+import org.forgerock.opendj.ldap.LdapException;
 import org.forgerock.openig.heap.GenericHeaplet;
 import org.forgerock.openig.heap.HeapException;
 import org.forgerock.openig.http.EndpointRegistry;
@@ -38,9 +40,8 @@ import org.forgerock.util.promise.Promise;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Collections;
+import java.util.Set;
 
 import static java.lang.String.format;
 import static org.forgerock.json.JsonValue.*;
@@ -55,8 +56,6 @@ import static org.forgerock.util.promise.Promises.newExceptionPromise;
  * Extension of {@code UmaSharingService}. Adds: Support for realm
  */
 public class UmaSharingServiceExt extends UmaSharingService {
-
-    private final Map<String, Share> shares = new TreeMap<>();
 
     private final Handler protectionApiHandler;
     private final URI authorizationServer;
@@ -123,8 +122,8 @@ public class UmaSharingServiceExt extends UmaSharingService {
      * @see <a href="https://docs.kantarainitiative.org/uma/draft-oauth-resource-reg.html#rfc.section.2">Resource Set
      * Registration</a>
      */
-    public Promise<Share, UmaException> createShare(final Context context,
-                                                    final CreateRequest createRequest) {
+    public Promise<ShareExt, UmaException> createShare(final Context context,
+                                                       final CreateRequest createRequest) {
 
         final String resourcePath = createRequest.getContent().get("path").asString();
         final String pat = createRequest.getContent().get("pat").asString();
@@ -145,15 +144,14 @@ public class UmaSharingServiceExt extends UmaSharingService {
         //}
 
         return createResourceSet(context, pat, resourceSet(name, scopes, type))
-                .then(new Function<Response, Share, UmaException>() {
+                .then(new Function<Response, ShareExt, UmaException>() {
                     @Override
-                    public Share apply(final Response response) throws UmaException {
+                    public ShareExt apply(final Response response) throws UmaException {
                         if (response.getStatus() == Status.CREATED) {
                             try {
                                 JsonValue value = json(response.getEntity().getJson());
-                                Share share = new Share(null, value, Pattern.compile(resourcePath), pat);
+                                ShareExt share = new ShareExt(value.get("_id").asString(), pat, resourcePath, value.get("user_access_policy_uri").asString());
                                 ldapManager.addShare(share);
-                                shares.put(share.getId(), share);
                                 return share;
                             } catch (IOException e) {
                                 throw new UmaException("Can't read the CREATE resource_set response", e);
@@ -161,22 +159,24 @@ public class UmaSharingServiceExt extends UmaSharingService {
                         }
                         throw new UmaException("Cannot register resource_set in AS: " + response.getEntity());
                     }
-                }, Responses.<Share, UmaException>noopExceptionFunction());
+                }, Responses.<ShareExt, UmaException>noopExceptionFunction());
     }
 
-    private boolean isShared(final String path) {
-        for (Share share : shares.values()) {
-            if (path.equals(share.getPattern().toString())) {
-                return true;
-            }
+    private boolean isShared(final String resourcePath) {
+        try {
+            return (ldapManager.getShare(resourcePath) != null);
+        } catch (EntryNotFoundException e) {
+            return false;
+        } catch (LdapException e) {
+            e.printStackTrace();
+            //TODO handle this
         }
         return false;
     }
 
     private Promise<Response, NeverThrowsException> createResourceSet(final Context context,
                                                                       final String pat,
-                                                                      final JsonValue data
-    ) {
+                                                                      final JsonValue data) {
         Request request = new Request();
         request.setMethod("POST");
         request.setUri(resourceSetEndpoint);
@@ -208,22 +208,18 @@ public class UmaSharingServiceExt extends UmaSharingService {
         //   shares: [ /alice.*, /alice/allergies, /alice/allergies/pollen ]
         // expects the last share to be returned
         Share matching = null;
-        String path = request.getUri().getPath();
-        int longest = -1;
-        for (Share share : shares.values()) {
-            Matcher matcher = share.getPattern().matcher(path);
-            if (matcher.matches() && matcher.end() > longest) {
-                matching = share;
-                longest = matcher.end();
-            }
+        String resourcePath = request.getUri().getPath();
+
+        try {
+            return ldapManager.getShare(resourcePath);
+        } catch (EntryNotFoundException e) {
+            throw new UmaException(format("Can't find any shared resource for %s", resourcePath));
+        } catch (LdapException e) {
+            e.printStackTrace();
+            //TODO handle this
         }
 
-        // Fail-fast if no shares matched
-        if (matching == null) {
-            throw new UmaException(format("Can't find any shared resource for %s", path));
-        }
-
-        return matching;
+        throw new UmaException(format("Can't find any shared resource for %s", resourcePath));
     }
 
     /**
@@ -234,17 +230,10 @@ public class UmaSharingServiceExt extends UmaSharingService {
      * @return the removed Share instance if found, {@code null} otherwise.
      */
     public Share removeShare(String shareId) {
-        return shares.remove(shareId);
+        //return shares.remove(shareId);
+        return null;
     }
 
-    /**
-     * Returns a copy of the list of currently managed shares.
-     *
-     * @return a copy of the list of currently managed shares.
-     */
-    public Set<Share> listShares() {
-        return new HashSet<>(shares.values());
-    }
 
     /**
      * Returns the UMA authorization server base Uri.
@@ -280,7 +269,8 @@ public class UmaSharingServiceExt extends UmaSharingService {
      * @return the {@link Share} with the given {@code id} (or {@code null} if none was found).
      */
     public Share getShare(final String id) {
-        return shares.get(id);
+        //return shares.get(id);
+        return null;
     }
 
     /**

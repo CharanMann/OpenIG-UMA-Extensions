@@ -32,6 +32,7 @@ public class UmaClassAliasResolverExt implements ClassAliasResolver {
 
     static {
         ALIASES.put("UmaServiceExt", UmaSharingServiceExt.class);
+        ALIASES.put("UmaFilterExt", UmaResourceServerFilterExt.class);
     }
 
     @Override

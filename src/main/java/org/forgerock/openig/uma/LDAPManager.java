@@ -56,7 +56,7 @@ public class LDAPManager {
                 .addAttribute("objectclass", "frUmaRS")
                 .addAttribute("umaResourceSetId", share.getResourceSetId())
                 .addAttribute("umaResourceURI", share.getRequestURI())
-                .addAttribute("umaResoucePAT", share.getPat())
+                .addAttribute("umaResoucePAT", share.getPAT())
                 .addAttribute("umaResourcePolicyURL", share.getPolicyURL());
 
         ldapConnection.add(entry);

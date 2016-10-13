@@ -24,10 +24,13 @@
           }
         },
         {
-          "type": "UmaFilter",
+          "type": "UmaFilterExt",
           "config": {
             "protectionApiHandler": "ClientHandler",
-            "umaService": "UmaServiceExt"
+            "umaService": "UmaServiceExt",
+            "scopes" : [
+              "http://login.example.com/scopes/view"
+            ]
           }
         }
       ],

@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -55,7 +56,7 @@ import static org.forgerock.util.promise.Promises.newExceptionPromise;
 /**
  * Extension of {@code UmaSharingService}. Adds: Support for realm
  */
-public class UmaSharingServiceExt extends UmaSharingService {
+public class UmaSharingServiceExt  {
 
     private final Handler protectionApiHandler;
     private final URI authorizationServer;
@@ -84,8 +85,6 @@ public class UmaSharingServiceExt extends UmaSharingService {
                                 final String clientSecret,
                                 final LDAPManager ldapManager)
             throws URISyntaxException {
-        super(protectionApiHandler, Collections.<ShareTemplate>emptyList(), authorizationServer,
-                clientId, clientSecret);
         this.protectionApiHandler = protectionApiHandler;
         this.authorizationServer = appendTrailingSlash(authorizationServer);
 
@@ -194,20 +193,15 @@ public class UmaSharingServiceExt extends UmaSharingService {
     }
 
     /**
-     * Find a {@link Share}.
+     * Find a {@link ShareExt}.
      *
      * @param request the incoming requesting party request
-     * @return a {@link Share} to be used to protect the resource access
-     * @throws UmaException when no {@link Share} can handle the request.
+     * @return a {@link ShareExt} to be used to protect the resource access
+     * @throws UmaException when no {@link ShareExt} can handle the request.
      */
-    public Share findShare(Request request) throws UmaException {
+    public ShareExt findShare(Request request) throws UmaException {
 
         // Need to find which Share to use
-        // The logic here is that the longest matching segment denotes the best share
-        //   request: /alice/allergies/pollen
-        //   shares: [ /alice.*, /alice/allergies, /alice/allergies/pollen ]
-        // expects the last share to be returned
-        Share matching = null;
         String resourcePath = request.getUri().getPath();
 
         try {
@@ -229,7 +223,7 @@ public class UmaSharingServiceExt extends UmaSharingService {
      * @param shareId share identifier
      * @return the removed Share instance if found, {@code null} otherwise.
      */
-    public Share removeShare(String shareId) {
+    public ShareExt removeShare(String shareId) {
         //return shares.remove(shareId);
         return null;
     }
@@ -263,14 +257,22 @@ public class UmaSharingServiceExt extends UmaSharingService {
     }
 
     /**
-     * Returns the {@link Share} with the given {@code id}.
+     * Returns the {@link ShareExt} with the given {@code id}.
      *
      * @param id Share identifier
-     * @return the {@link Share} with the given {@code id} (or {@code null} if none was found).
+     * @return the {@link ShareExt} with the given {@code id} (or {@code null} if none was found).
      */
-    public Share getShare(final String id) {
+    public ShareExt getShare(final String id) {
         //return shares.get(id);
         return null;
+    }
+
+    /**
+     * Returns a copy of the list of currently managed shares.
+     * @return a copy of the list of currently managed shares.
+     */
+    public Set<ShareExt> listShares() {
+        return Collections.EMPTY_SET;
     }
 
     /**

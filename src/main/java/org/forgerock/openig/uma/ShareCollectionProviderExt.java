@@ -25,10 +25,14 @@ import org.forgerock.services.context.Context;
 import org.forgerock.util.Function;
 import org.forgerock.util.promise.Promise;
 
+import static java.lang.String.format;
 import static org.forgerock.json.JsonValue.*;
+import static org.forgerock.json.resource.Responses.newQueryResponse;
 import static org.forgerock.json.resource.Responses.newResourceResponse;
+import static org.forgerock.util.promise.Promises.newResultPromise;
+import static org.forgerock.util.query.QueryFilter.alwaysTrue;
 
-public class ShareCollectionProviderExt extends ShareCollectionProvider {
+public class ShareCollectionProviderExt implements CollectionResourceProvider {
 
     private final UmaSharingServiceExt service;
 
@@ -38,16 +42,7 @@ public class ShareCollectionProviderExt extends ShareCollectionProvider {
      * @param service delegating service
      */
     public ShareCollectionProviderExt(final UmaSharingServiceExt service) {
-        super(service);
         this.service = service;
-    }
-
-    private static JsonValue asJson(final ShareExt share) {
-        return json(object(field("id", share.getId()),
-                field("resourceURI", share.getRequestURI()),
-                field("user_access_policy_uri", share.getPolicyURL()),
-                field("pat", share.getPat()),
-                field("resource_set_id", share.getResourceSetId())));
     }
 
     @Override
@@ -69,5 +64,78 @@ public class ShareCollectionProviderExt extends ShareCollectionProvider {
                         throw new BadRequestException("Failed to create a share", exception);
                     }
                 });
+    }
+
+    private static JsonValue asJson(final ShareExt share) {
+        return json(object(field("id", share.getId()),
+                field("resourceURI", share.getRequestURI()),
+                field("user_access_policy_uri", share.getPolicyURL()),
+                field("pat", share.getPAT()),
+                field("resource_set_id", share.getResourceSetId())));
+    }
+
+    @Override
+    public Promise<ResourceResponse, ResourceException> deleteInstance(final Context context,
+                                                                       final String resourceId,
+                                                                       final DeleteRequest request) {
+        ShareExt share = service.removeShare(resourceId);
+        if (share == null) {
+            return new NotFoundException(format("Share %s is unknown", resourceId)).asPromise();
+        }
+        return newResultPromise(newResourceResponse(resourceId, null, asJson(share)));
+    }
+
+    @Override
+    public Promise<ResourceResponse, ResourceException> patchInstance(final Context context,
+                                                                      final String resourceId,
+                                                                      final PatchRequest request) {
+        return new NotSupportedException().asPromise();
+    }
+
+    @Override
+    public Promise<QueryResponse, ResourceException> queryCollection(final Context context,
+                                                                     final QueryRequest request,
+                                                                     final QueryResourceHandler handler) {
+
+        // Reject queries with query ID, provided expressions and non "true" filter
+        if (request.getQueryId() != null
+                || request.getQueryExpression() != null
+                || !alwaysTrue().equals(request.getQueryFilter())) {
+            return new NotSupportedException("Only accept queries with filter=true").asPromise();
+        }
+
+        for (ShareExt share : service.listShares()) {
+            handler.handleResource(newResourceResponse(share.getId(), null, asJson(share)));
+        }
+
+        return newResultPromise(newQueryResponse());
+    }
+
+    @Override
+    public Promise<ResourceResponse, ResourceException> readInstance(final Context context,
+                                                                     final String resourceId,
+                                                                     final ReadRequest request) {
+        ShareExt share = service.getShare(resourceId);
+        return newResultPromise(newResourceResponse(resourceId, null, asJson(share)));
+    }
+
+    @Override
+    public Promise<ResourceResponse, ResourceException> updateInstance(final Context context,
+                                                                       final String resourceId,
+                                                                       final UpdateRequest request) {
+        return new NotSupportedException().asPromise();
+    }
+
+    @Override
+    public Promise<ActionResponse, ResourceException> actionCollection(final Context context,
+                                                                       final ActionRequest request) {
+        return new NotSupportedException().asPromise();
+    }
+
+    @Override
+    public Promise<ActionResponse, ResourceException> actionInstance(final Context context,
+                                                                     final String resourceId,
+                                                                     final ActionRequest request) {
+        return new NotSupportedException().asPromise();
     }
 }

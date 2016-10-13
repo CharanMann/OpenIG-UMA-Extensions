@@ -21,20 +21,19 @@ package org.forgerock.openig.uma;
 
 import java.util.UUID;
 
-public class ShareExt extends Share{
+public class ShareExt {
 
     private String id;
     private String resourceSetId;
-    private String pat;
+    private String PAT;
     private String requestURI;
     private String policyURL;
     private String refreshToken;
 
-    public ShareExt(String resourceSetId, String pat, String requestURI, String policyURL) {
-        super(null,null,null,null);
+    public ShareExt(String resourceSetId, String PAT, String requestURI, String policyURL) {
         this.id = UUID.randomUUID().toString();
         this.resourceSetId = resourceSetId;
-        this.pat = pat;
+        this.PAT = PAT;
         this.requestURI = requestURI;
         this.policyURL = policyURL;
     }
@@ -55,12 +54,12 @@ public class ShareExt extends Share{
         this.resourceSetId = resourceSetId;
     }
 
-    public String getPat() {
-        return pat;
+    public String getPAT() {
+        return PAT;
     }
 
-    public void setPat(String pat) {
-        this.pat = pat;
+    public void setPAT(String PAT) {
+        this.PAT = PAT;
     }
 
     public String getRequestURI() {

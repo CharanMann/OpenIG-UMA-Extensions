@@ -49,7 +49,6 @@ import static org.forgerock.http.header.WarningHeader.MISCELLANEOUS_WARNING;
 import static org.forgerock.http.protocol.Response.newResponsePromise;
 import static org.forgerock.http.protocol.Responses.newInternalServerError;
 import static org.forgerock.json.JsonValue.*;
-import static org.forgerock.json.JsonValue.json;
 import static org.forgerock.openig.util.JsonValues.evaluated;
 import static org.forgerock.openig.util.JsonValues.requiredHeapObject;
 import static org.forgerock.util.Utils.closeSilently;
@@ -58,7 +57,7 @@ import static org.forgerock.util.Utils.closeSilently;
  * An {@link UmaResourceServerFilter} implements a PEP (Policy Enforcement Point) and is responsible to ensure the
  * incoming requests (from requesting parties) all have a valid RPT (Request Party Token) with the required set of
  * scopes.
- *
+ * <p>
  * <pre>
  *     {@code {
  *         "type": "UmaFilter",
@@ -80,16 +79,13 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
     /**
      * Constructs a new UmaResourceServerFilter.
      *
-     * @param umaService
-     *         core service to use
-     * @param protectionApiHandler
-     *         protectionApiHandler to use when interacting with introspection and permission request endpoints
-     * @param realm
-     *         UMA realm name (can be {@code null})
+     * @param umaService           core service to use
+     * @param protectionApiHandler protectionApiHandler to use when interacting with introspection and permission request endpoints
+     * @param realm                UMA realm name (can be {@code null})
      */
     public UmaResourceServerFilterExt(final UmaSharingServiceExt umaService,
-                                   final Handler protectionApiHandler,
-                                   final String realm, final Set<Object> scopes) {
+                                      final Handler protectionApiHandler,
+                                      final String realm, final Set<Object> scopes) {
         this.umaService = umaService;
         this.protectionApiHandler = protectionApiHandler;
         this.realm = realm;
@@ -126,10 +122,10 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
 
     /**
      * Call the UMA Permission Registration Endpoint to register a requested permission with the authorization server.
-     *
+     * <p>
      * <p>If the registration succeed, the obtained opaque ticket is returned to the client with an additional {@literal
      * WWW-Authenticate} header:
-     *
+     * <p>
      * <pre>
      *     {@code HTTP/1.1 401 Unauthorized
      *       WWW-Authenticate: UMA realm="example",
@@ -137,15 +133,12 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
      *                             ticket="016f84e8-f9b9-11e0-bd6f-0021cc6004de"
      *     }
      * </pre>
-     *
+     * <p>
      * Otherwise, a {@literal 403 Forbidden} response with an informative {@literal Warning} header is produced.
      *
-     * @param context
-     *         Context chain used to keep a relationship between requests (tracking)
-     * @param share
-     *         represents protection information about the requested resource
-     * @param incoming
-     *         request used to infer the set of permissions to ask
+     * @param context  Context chain used to keep a relationship between requests (tracking)
+     * @param share    represents protection information about the requested resource
+     * @param incoming request used to infer the set of permissions to ask
      * @return an asynchronous {@link Response}
      * @see <a href="https://docs.kantarainitiative.org/uma/draft-uma-core-v1_0_1.html#rfc.section.3.2">Request
      * Permission Registration</a>
@@ -167,10 +160,8 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
     /**
      * Builds the resource set registration {@link Request}'s JSON content.
      *
-     * @param share
-     *         represents protection information about the requested resource
-     * @param request
-     *         request used to infer the set of permissions to ask
+     * @param share   represents protection information about the requested resource
+     * @param request request used to infer the set of permissions to ask
      * @return a JSON structure that represents a resource set registration
      * @see <a href="https://docs.kantarainitiative.org/uma/draft-oauth-resource-reg-v1_0_1.html#resource-set-desc">
      * Resource Set Descriptions</a>
@@ -197,6 +188,23 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
         query.toRequestEntity(request);
 
         return protectionApiHandler.handle(context, request);
+    }
+
+    /**
+     * Creates and initializes an UMA resource server filter in a heap environment.
+     */
+    public static class Heaplet extends GenericHeaplet {
+
+        @Override
+        public Object create() throws HeapException {
+            UmaSharingServiceExt service = config.get("umaService")
+                    .required()
+                    .as(requiredHeapObject(heap, UmaSharingServiceExt.class));
+            Handler handler = config.get("protectionApiHandler").required().as(requiredHeapObject(heap, Handler.class));
+            String realm = config.get("realm").as(evaluated()).defaultTo("uma").asString();
+            Set<Object> scopes = config.get("scopes").as(evaluated()).asSet();
+            return new UmaResourceServerFilterExt(service, handler, realm, scopes);
+        }
     }
 
     private class VerifyScopesAsyncFunction implements AsyncFunction<Response, Response, NeverThrowsException> {
@@ -309,23 +317,6 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
                 // Close previous response object
                 closeSilently(response);
             }
-        }
-    }
-
-    /**
-     * Creates and initializes an UMA resource server filter in a heap environment.
-     */
-    public static class Heaplet extends GenericHeaplet {
-
-        @Override
-        public Object create() throws HeapException {
-            UmaSharingServiceExt service = config.get("umaService")
-                    .required()
-                    .as(requiredHeapObject(heap, UmaSharingServiceExt.class));
-            Handler handler = config.get("protectionApiHandler").required().as(requiredHeapObject(heap, Handler.class));
-            String realm = config.get("realm").as(evaluated()).defaultTo("uma").asString();
-            Set<Object> scopes = config.get("scopes").as(evaluated()).asSet();
-            return new UmaResourceServerFilterExt(service, handler, realm, scopes);
         }
     }
 }

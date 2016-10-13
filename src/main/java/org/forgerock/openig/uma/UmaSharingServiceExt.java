@@ -21,10 +21,7 @@ package org.forgerock.openig.uma;
 
 import org.forgerock.http.Handler;
 import org.forgerock.http.MutableUri;
-import org.forgerock.http.protocol.Request;
-import org.forgerock.http.protocol.Response;
-import org.forgerock.http.protocol.Responses;
-import org.forgerock.http.protocol.Status;
+import org.forgerock.http.protocol.*;
 import org.forgerock.json.JsonValue;
 import org.forgerock.json.resource.CreateRequest;
 import org.forgerock.opendj.ldap.EntryNotFoundException;
@@ -41,7 +38,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -56,7 +52,7 @@ import static org.forgerock.util.promise.Promises.newExceptionPromise;
 /**
  * Extension of {@code UmaSharingService}. Adds: Support for realm
  */
-public class UmaSharingServiceExt  {
+public class UmaSharingServiceExt {
 
     private final Handler protectionApiHandler;
     private final URI authorizationServer;
@@ -65,6 +61,7 @@ public class UmaSharingServiceExt  {
     private final URI resourceSetEndpoint;
     private final String clientId;
     private final String clientSecret;
+    private final String realm;
     private LDAPManager ldapManager;
 
 
@@ -88,6 +85,7 @@ public class UmaSharingServiceExt  {
         this.protectionApiHandler = protectionApiHandler;
         this.authorizationServer = appendTrailingSlash(authorizationServer);
 
+        this.realm = realm;
         this.introspectionEndpoint = authorizationServer.resolve("oauth2" + realm + "/introspect");
         this.ticketEndpoint = authorizationServer.resolve("uma" + realm + "/permission_request");
         this.resourceSetEndpoint = authorizationServer.resolve("oauth2" + realm + "/resource_set");
@@ -130,17 +128,10 @@ public class UmaSharingServiceExt  {
         String type = createRequest.getContent().get("type").asString();
         Set<Object> scopes = createRequest.getContent().get("scopes").asSet();
 
-        if (isShared(resourcePath)) {
+        if (isShared(context, pat, resourcePath)) {
             // We do not accept re-sharing or post-creation resource_set configuration
             return newExceptionPromise(new UmaException(format("Resource %s is already shared", resourcePath)));
         }
-
-        // Need to find which ShareTemplate to use
-        //final ShareTemplate matching = findShareTemplate(resourcePath);
-
-        //if (matching == null) {
-        //  return newExceptionPromise(new UmaException(format("Can't find a template for resource %s", resourcePath)));
-        //}
 
         return createResourceSet(context, pat, resourceSet(name, scopes, type))
                 .then(new Function<Response, ShareExt, UmaException>() {
@@ -149,7 +140,7 @@ public class UmaSharingServiceExt  {
                         if (response.getStatus() == Status.CREATED) {
                             try {
                                 JsonValue value = json(response.getEntity().getJson());
-                                ShareExt share = new ShareExt(value.get("_id").asString(), pat, resourcePath, value.get("user_access_policy_uri").asString());
+                                ShareExt share = new ShareExt(value.get("_id").asString(), pat, resourcePath, value.get("user_access_policy_uri").asString(), "alice", realm, clientId);
                                 ldapManager.addShare(share);
                                 return share;
                             } catch (IOException e) {
@@ -161,16 +152,38 @@ public class UmaSharingServiceExt  {
                 }, Responses.<ShareExt, UmaException>noopExceptionFunction());
     }
 
-    private boolean isShared(final String resourcePath) {
+    private boolean isShared(final Context context, final String pat, final String resourcePath) {
         try {
-            return (ldapManager.getShare(resourcePath) != null);
+            Promise<Response, NeverThrowsException> responseNeverThrowsExceptionPromise = introspectToken(context, pat);
+            Response response = responseNeverThrowsExceptionPromise.get();
+            JsonValue value = json(response.getEntity().getJson());
+            String userId = value.get("sub").asString();
+
+            return (ldapManager.getShare(resourcePath, userId, realm, clientId) != null);
         } catch (EntryNotFoundException e) {
             return false;
-        } catch (LdapException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             //TODO handle this
         }
         return false;
+    }
+
+    private Promise<Response, NeverThrowsException> introspectToken(final Context context,
+                                                                    final String pat) {
+        Request request = new Request();
+        request.setUri(introspectionEndpoint);
+        // Should accept a PAT as per the spec (See OPENAM-6320 / OPENAM-5928)
+        //request.getHeaders().put("Authorization", format("Bearer %s", pat));
+        request.getHeaders().put("Accept", "application/json");
+
+        Form query = new Form();
+        query.putSingle("token", pat);
+        query.putSingle("client_id", clientId);
+        query.putSingle("client_secret", clientSecret);
+        query.toRequestEntity(request);
+
+        return protectionApiHandler.handle(context, request);
     }
 
     private Promise<Response, NeverThrowsException> createResourceSet(final Context context,
@@ -202,18 +215,19 @@ public class UmaSharingServiceExt  {
     public ShareExt findShare(Request request) throws UmaException {
 
         // Need to find which Share to use
-        String resourcePath = request.getUri().getPath();
+        String requestURI = request.getUri().getPath();
+        String userId = request.getForm().getFirst("userId");
 
         try {
-            return ldapManager.getShare(resourcePath);
+            return ldapManager.getShare(requestURI, userId, realm, clientId);
         } catch (EntryNotFoundException e) {
-            throw new UmaException(format("Can't find any shared resource for %s", resourcePath));
+            throw new UmaException(format("Can't find any shared resource for %s", requestURI));
         } catch (LdapException e) {
             e.printStackTrace();
             //TODO handle this
         }
 
-        throw new UmaException(format("Can't find any shared resource for %s", resourcePath));
+        throw new UmaException(format("Can't find any shared resource for %s", requestURI));
     }
 
     /**
@@ -269,6 +283,7 @@ public class UmaSharingServiceExt  {
 
     /**
      * Returns a copy of the list of currently managed shares.
+     *
      * @return a copy of the list of currently managed shares.
      */
     public Set<ShareExt> listShares() {

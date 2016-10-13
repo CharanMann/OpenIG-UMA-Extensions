@@ -45,6 +45,17 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
         this.service = service;
     }
 
+    private static JsonValue asJson(final ShareExt share) {
+        return json(object(field("id", share.getId()),
+                field("resourceURI", share.getRequestURI()),
+                field("user_access_policy_uri", share.getPolicyURL()),
+                field("pat", share.getPAT()),
+                field("resource_set_id", share.getResourceSetId()),
+                field("userId", share.getUserId()),
+                field("realm", share.getRealm()),
+                field("client_id", share.getClientId())));
+    }
+
     @Override
     public Promise<ResourceResponse, ResourceException> createInstance(final Context context,
                                                                        final CreateRequest request) {
@@ -64,14 +75,6 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
                         throw new BadRequestException("Failed to create a share", exception);
                     }
                 });
-    }
-
-    private static JsonValue asJson(final ShareExt share) {
-        return json(object(field("id", share.getId()),
-                field("resourceURI", share.getRequestURI()),
-                field("user_access_policy_uri", share.getPolicyURL()),
-                field("pat", share.getPAT()),
-                field("resource_set_id", share.getResourceSetId())));
     }
 
     @Override

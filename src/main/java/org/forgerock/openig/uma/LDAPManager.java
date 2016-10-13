@@ -57,7 +57,10 @@ public class LDAPManager {
                 .addAttribute("umaResourceSetId", share.getResourceSetId())
                 .addAttribute("umaResourceURI", share.getRequestURI())
                 .addAttribute("umaResoucePAT", share.getPAT())
-                .addAttribute("umaResourcePolicyURL", share.getPolicyURL());
+                .addAttribute("umaResourcePolicyURL", share.getPolicyURL())
+                .addAttribute("umaResourceUserID", share.getUserId())
+                .addAttribute("umaResourceRealm", share.getRealm())
+                .addAttribute("umaResourceClientId", share.getClientId());
 
         ldapConnection.add(entry);
     }
@@ -69,15 +72,19 @@ public class LDAPManager {
      * @return ShareExt
      * @throws LdapException
      */
-    ShareExt getShare(String requestURI) throws LdapException {
-        String filter = ldapClient.filter("(umaResourceURI=%s)", requestURI);
+    ShareExt getShare(String requestURI, String userId, String realm, String clientId) throws LdapException {
+        String filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, userId, realm, clientId);
 
         Entry resultEntry = ldapConnection.searchSingleEntry(baseDN, SearchScope.WHOLE_SUBTREE, filter);
         String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
         String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
         String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
         String policyURL = resultEntry.getAttribute("umaResourcePolicyURL").firstValueAsString();
-        ShareExt share = new ShareExt(rId, pat, requestURI, policyURL);
+        userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();
+        realm = resultEntry.getAttribute("umaResourceRealm").firstValueAsString();
+        clientId = resultEntry.getAttribute("umaResourceClientId").firstValueAsString();
+
+        ShareExt share = new ShareExt(rId, pat, requestURI, policyURL, userId, realm, clientId);
         share.setId(id);
         return share;
     }

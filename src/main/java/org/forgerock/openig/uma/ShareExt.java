@@ -25,9 +25,10 @@ public class ShareExt {
 
     private String id;
     private String resourceSetId;
+    private String resourceName;
     private String PAT;
     private String requestURI;
-    private String policyURL;
+    private String policyURI;
     private String refreshToken;
     private String realm;
     private String userId;
@@ -39,17 +40,18 @@ public class ShareExt {
      * @param resourceSetId
      * @param PAT
      * @param requestURI
-     * @param policyURL
+     * @param policyURI
      * @param realm
      * @param userId
      * @param clientId
      */
-    public ShareExt(String resourceSetId, String PAT, String requestURI, String policyURL, String userId, String realm, String clientId) {
+    public ShareExt(String resourceSetId, String resourceName, String PAT, String requestURI, String policyURI, String userId, String realm, String clientId) {
         this.id = UUID.randomUUID().toString();
         this.resourceSetId = resourceSetId;
+        this.resourceName = resourceName;
         this.PAT = PAT;
         this.requestURI = requestURI;
-        this.policyURL = policyURL;
+        this.policyURI = policyURI;
         this.realm = realm;
         this.userId = userId;
         this.clientId = clientId;
@@ -87,12 +89,12 @@ public class ShareExt {
         this.requestURI = requestURI;
     }
 
-    public String getPolicyURL() {
-        return policyURL;
+    public String getPolicyURI() {
+        return policyURI;
     }
 
-    public void setPolicyURL(String policyURL) {
-        this.policyURL = policyURL;
+    public void setPolicyURI(String policyURI) {
+        this.policyURI = policyURI;
     }
 
     public String getRefreshToken() {
@@ -125,6 +127,14 @@ public class ShareExt {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
     }
 
 }

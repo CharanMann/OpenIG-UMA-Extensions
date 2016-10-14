@@ -24,11 +24,13 @@ import org.forgerock.http.MutableUri;
 import org.forgerock.http.protocol.*;
 import org.forgerock.json.JsonValue;
 import org.forgerock.json.resource.CreateRequest;
+import org.forgerock.json.resource.http.HttpContext;
 import org.forgerock.opendj.ldap.EntryNotFoundException;
 import org.forgerock.opendj.ldap.LdapException;
 import org.forgerock.openig.heap.GenericHeaplet;
 import org.forgerock.openig.heap.HeapException;
 import org.forgerock.openig.http.EndpointRegistry;
+import org.forgerock.openig.oauth2.OAuth2;
 import org.forgerock.services.context.Context;
 import org.forgerock.util.Function;
 import org.forgerock.util.promise.NeverThrowsException;
@@ -122,15 +124,15 @@ public class UmaSharingServiceExt {
     public Promise<ShareExt, UmaException> createShare(final Context context,
                                                        final CreateRequest createRequest) {
 
-        final String resourcePath = createRequest.getContent().get("path").asString();
-        final String pat = createRequest.getContent().get("pat").asString();
-        String name = createRequest.getContent().get("name").asString();
+        final String pat = OAuth2.getBearerAccessToken(((HttpContext)context.getParent()).getHeaderAsString("Authorization"));
+        final String uri = createRequest.getContent().get("uri").asString();
+        final String name = createRequest.getContent().get("name").asString();
         String type = createRequest.getContent().get("type").asString();
         Set<Object> scopes = createRequest.getContent().get("scopes").asSet();
 
-        if (isShared(context, pat, resourcePath)) {
+        if (isShared(context, pat, uri)) {
             // We do not accept re-sharing or post-creation resource_set configuration
-            return newExceptionPromise(new UmaException(format("Resource %s is already shared", resourcePath)));
+            return newExceptionPromise(new UmaException(format("Resource %s is already shared", uri)));
         }
 
         return createResourceSet(context, pat, resourceSet(name, scopes, type))
@@ -140,7 +142,7 @@ public class UmaSharingServiceExt {
                         if (response.getStatus() == Status.CREATED) {
                             try {
                                 JsonValue value = json(response.getEntity().getJson());
-                                ShareExt share = new ShareExt(value.get("_id").asString(), pat, resourcePath, value.get("user_access_policy_uri").asString(), "alice", realm, clientId);
+                                ShareExt share = new ShareExt(value.get("_id").asString(), name, pat, uri, value.get("user_access_policy_uri").asString(), "alice", realm, clientId);
                                 ldapManager.addShare(share);
                                 return share;
                             } catch (IOException e) {
@@ -215,19 +217,19 @@ public class UmaSharingServiceExt {
     public ShareExt findShare(Request request) throws UmaException {
 
         // Need to find which Share to use
-        String requestURI = request.getUri().getPath();
+        String requestPath = request.getUri().getPath();
         String userId = request.getForm().getFirst("userId");
 
         try {
-            return ldapManager.getShare(requestURI, userId, realm, clientId);
+            return ldapManager.getShare(requestPath, userId, realm, clientId);
         } catch (EntryNotFoundException e) {
-            throw new UmaException(format("Can't find any shared resource for %s", requestURI));
+            throw new UmaException(format("Can't find any shared resource for %s", requestPath));
         } catch (LdapException e) {
             e.printStackTrace();
             //TODO handle this
         }
 
-        throw new UmaException(format("Can't find any shared resource for %s", requestURI));
+        throw new UmaException(format("Can't find any shared resource for %s", requestPath));
     }
 
     /**

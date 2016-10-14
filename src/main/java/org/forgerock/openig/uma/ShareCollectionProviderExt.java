@@ -48,7 +48,7 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
     private static JsonValue asJson(final ShareExt share) {
         return json(object(field("id", share.getId()),
                 field("resourceURI", share.getRequestURI()),
-                field("user_access_policy_uri", share.getPolicyURL()),
+                field("user_access_policy_uri", share.getPolicyURI()),
                 field("pat", share.getPAT()),
                 field("resource_set_id", share.getResourceSetId()),
                 field("userId", share.getUserId()),

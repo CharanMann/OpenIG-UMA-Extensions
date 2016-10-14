@@ -56,8 +56,9 @@ public class LDAPManager {
                 .addAttribute("objectclass", "frUmaRS")
                 .addAttribute("umaResourceSetId", share.getResourceSetId())
                 .addAttribute("umaResourceURI", share.getRequestURI())
+                .addAttribute("umaResourceName", share.getResourceName())
                 .addAttribute("umaResoucePAT", share.getPAT())
-                .addAttribute("umaResourcePolicyURL", share.getPolicyURL())
+                .addAttribute("umaResourcePolicyURI", share.getPolicyURI())
                 .addAttribute("umaResourceUserID", share.getUserId())
                 .addAttribute("umaResourceRealm", share.getRealm())
                 .addAttribute("umaResourceClientId", share.getClientId());
@@ -78,13 +79,14 @@ public class LDAPManager {
         Entry resultEntry = ldapConnection.searchSingleEntry(baseDN, SearchScope.WHOLE_SUBTREE, filter);
         String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
         String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
+        String resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
         String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
-        String policyURL = resultEntry.getAttribute("umaResourcePolicyURL").firstValueAsString();
+        String policyURI = resultEntry.getAttribute("umaResourcePolicyURI").firstValueAsString();
         userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();
         realm = resultEntry.getAttribute("umaResourceRealm").firstValueAsString();
         clientId = resultEntry.getAttribute("umaResourceClientId").firstValueAsString();
 
-        ShareExt share = new ShareExt(rId, pat, requestURI, policyURL, userId, realm, clientId);
+        ShareExt share = new ShareExt(rId, resourceName, pat, requestURI, policyURI, userId, realm, clientId);
         share.setId(id);
         return share;
     }

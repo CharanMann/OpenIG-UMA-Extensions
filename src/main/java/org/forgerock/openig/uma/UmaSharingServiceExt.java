@@ -327,7 +327,15 @@ public class UmaSharingServiceExt {
             String realm = startsWithSlash(config.get("realm").defaultTo("/").asString());
             String clientId = config.get("clientId").as(evaluated()).required().asString();
             String clientSecret = config.get("clientSecret").as(evaluated()).required().asString();
-            LDAPManager ldapManager = new LDAPManager("192.168.56.122", 3389, "cn=Directory Manager", "cangetindj", "dc=openig,dc=forgerock,dc=org");
+
+            //LDAP configs
+            String ldapHost = config.get("ldapHost").as(evaluated()).defaultTo("localhost").asString();
+            Integer ldapPort = config.get("ldapPort").as(evaluated()).defaultTo(1389).asInteger();
+            String ldapAdminId = config.get("ldapAdminId").as(evaluated()).defaultTo("cn=Directory Manager").asString();
+            String ldapAdminPassword = config.get("ldapAdminPassword").as(evaluated()).required().asString();
+            String ldapBaseDN = config.get("ldapBaseDN").as(evaluated()).defaultTo("dc=openig,dc=forgerock,dc=org").asString();
+
+            LDAPManager ldapManager = new LDAPManager(ldapHost, ldapPort, ldapAdminId, ldapAdminPassword, ldapBaseDN);
             try {
                 UmaSharingServiceExt service = new UmaSharingServiceExt(handler, realm,
                         uri,

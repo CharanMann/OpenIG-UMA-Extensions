@@ -8,7 +8,12 @@
         "authorizationServerUri": "http://openam135.sample.com:8080/openam/",
 	    "realm": "/employees",
         "clientId": "OpenIG_RS",
-        "clientSecret": "password"
+        "clientSecret": "password",
+        "ldapHost": "192.168.56.122",
+        "ldapPort": 3389,
+        "ldapAdminId": "cn=Directory Manager",
+        "ldapAdminPassword": "cangetindj",
+        "ldapBaseDN": "dc=openig,dc=forgerock,dc=org"
       }
     }
   ],

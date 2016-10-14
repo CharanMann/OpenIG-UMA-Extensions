@@ -38,7 +38,7 @@ public class LDAPManager {
     public LDAPManager(String hostname, int port, String userName, String password, String baseDN) {
         this.userName = userName;
         this.password = password;
-        this.hostname =hostname;
+        this.hostname = hostname;
         this.port = port;
         this.baseDN = baseDN;
         try {
@@ -55,7 +55,7 @@ public class LDAPManager {
      * @param share
      */
     void addShare(ShareExt share) throws LdapException {
-        LdapConnection ldapConnection =null;
+        LdapConnection ldapConnection = null;
         try {
             ldapConnection = ldapClient.connect(hostname, port);
             ldapConnection.bind(userName, password.toCharArray());
@@ -74,8 +74,7 @@ public class LDAPManager {
                     .addAttribute("umaResourceClientId", share.getClientId());
 
             ldapConnection.add(entry);
-        }
-        finally {
+        } finally {
             if (null != ldapConnection) {
                 ldapConnection.close();
             }
@@ -90,7 +89,7 @@ public class LDAPManager {
      * @throws LdapException
      */
     ShareExt getShare(String requestURI, String resourceName, String userId, String realm, String clientId) throws LdapException {
-        LdapConnection ldapConnection =null;
+        LdapConnection ldapConnection = null;
         try {
             ldapConnection = ldapClient.connect(hostname, port);
             String filter;
@@ -113,8 +112,7 @@ public class LDAPManager {
             ShareExt share = new ShareExt(rId, resourceName, pat, requestURI, policyURI, userId, realm, clientId);
             share.setId(id);
             return share;
-        }
-        finally {
+        } finally {
             if (null != ldapConnection) {
                 ldapConnection.close();
             }

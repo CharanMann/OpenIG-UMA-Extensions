@@ -73,13 +73,18 @@ public class LDAPManager {
      * @return ShareExt
      * @throws LdapException
      */
-    ShareExt getShare(String requestURI, String userId, String realm, String clientId) throws LdapException {
-        String filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, userId, realm, clientId);
+    ShareExt getShare(String requestURI, String resourceName, String userId, String realm, String clientId) throws LdapException {
+        String filter;
+        if (null == resourceName) {
+            filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, userId, realm, clientId);
+        } else {
+            filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceName=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, resourceName, userId, realm, clientId);
+        }
 
         Entry resultEntry = ldapConnection.searchSingleEntry(baseDN, SearchScope.WHOLE_SUBTREE, filter);
         String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
         String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
-        String resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
+        resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
         String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
         String policyURI = resultEntry.getAttribute("umaResourcePolicyURI").firstValueAsString();
         userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();

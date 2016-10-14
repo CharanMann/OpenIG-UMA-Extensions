@@ -124,13 +124,13 @@ public class UmaSharingServiceExt {
     public Promise<ShareExt, UmaException> createShare(final Context context,
                                                        final CreateRequest createRequest) {
 
-        final String pat = OAuth2.getBearerAccessToken(((HttpContext)context.getParent()).getHeaderAsString("Authorization"));
+        final String pat = OAuth2.getBearerAccessToken(((HttpContext) context.getParent()).getHeaderAsString("Authorization"));
         final String uri = createRequest.getContent().get("uri").asString();
         final String name = createRequest.getContent().get("name").asString();
         String type = createRequest.getContent().get("type").asString();
         Set<Object> scopes = createRequest.getContent().get("scopes").asSet();
 
-        if (isShared(context, pat, uri)) {
+        if (isShared(context, name, pat, uri)) {
             // We do not accept re-sharing or post-creation resource_set configuration
             return newExceptionPromise(new UmaException(format("Resource %s is already shared", uri)));
         }
@@ -154,14 +154,14 @@ public class UmaSharingServiceExt {
                 }, Responses.<ShareExt, UmaException>noopExceptionFunction());
     }
 
-    private boolean isShared(final Context context, final String pat, final String resourcePath) {
+    private boolean isShared(final Context context, final String resourceName, final String pat, final String resourcePath) {
         try {
             Promise<Response, NeverThrowsException> responseNeverThrowsExceptionPromise = introspectToken(context, pat);
             Response response = responseNeverThrowsExceptionPromise.get();
             JsonValue value = json(response.getEntity().getJson());
             String userId = value.get("sub").asString();
 
-            return (ldapManager.getShare(resourcePath, userId, realm, clientId) != null);
+            return (ldapManager.getShare(resourcePath, resourceName, userId, realm, clientId) != null);
         } catch (EntryNotFoundException e) {
             return false;
         } catch (Exception e) {
@@ -221,7 +221,7 @@ public class UmaSharingServiceExt {
         String userId = request.getForm().getFirst("userId");
 
         try {
-            return ldapManager.getShare(requestPath, userId, realm, clientId);
+            return ldapManager.getShare(requestPath, null, userId, realm, clientId);
         } catch (EntryNotFoundException e) {
             throw new UmaException(format("Can't find any shared resource for %s", requestPath));
         } catch (LdapException e) {

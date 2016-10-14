@@ -28,16 +28,21 @@ import org.forgerock.openig.ldap.LdapConnection;
 
 public class LDAPManager {
 
-    private LdapConnection ldapConnection;
     private LdapClient ldapClient;
     private String baseDN;
+    private String userName;
+    private String password;
+    private String hostname;
+    private int port;
 
     public LDAPManager(String hostname, int port, String userName, String password, String baseDN) {
+        this.userName = userName;
+        this.password = password;
+        this.hostname =hostname;
+        this.port = port;
+        this.baseDN = baseDN;
         try {
             this.ldapClient = LdapClient.getInstance();
-            this.ldapConnection = ldapClient.connect(hostname, port);
-            this.ldapConnection.bind(userName, password.toCharArray());
-            this.baseDN = baseDN;
         } catch (Exception e) {
             e.printStackTrace();
             //TODO eating exception for now
@@ -50,20 +55,31 @@ public class LDAPManager {
      * @param share
      */
     void addShare(ShareExt share) throws LdapException {
-        String entryDN = "umaResourceId=" + share.getId() + "," + baseDN;
-        Entry entry = new LinkedHashMapEntry(entryDN)
-                .addAttribute("objectclass", "top")
-                .addAttribute("objectclass", "frUmaRS")
-                .addAttribute("umaResourceSetId", share.getResourceSetId())
-                .addAttribute("umaResourceURI", share.getRequestURI())
-                .addAttribute("umaResourceName", share.getResourceName())
-                .addAttribute("umaResoucePAT", share.getPAT())
-                .addAttribute("umaResourcePolicyURI", share.getPolicyURI())
-                .addAttribute("umaResourceUserID", share.getUserId())
-                .addAttribute("umaResourceRealm", share.getRealm())
-                .addAttribute("umaResourceClientId", share.getClientId());
+        LdapConnection ldapConnection =null;
+        try {
+            ldapConnection = ldapClient.connect(hostname, port);
+            ldapConnection.bind(userName, password.toCharArray());
 
-        ldapConnection.add(entry);
+            String entryDN = "umaResourceId=" + share.getId() + "," + baseDN;
+            Entry entry = new LinkedHashMapEntry(entryDN)
+                    .addAttribute("objectclass", "top")
+                    .addAttribute("objectclass", "frUmaRS")
+                    .addAttribute("umaResourceSetId", share.getResourceSetId())
+                    .addAttribute("umaResourceURI", share.getRequestURI())
+                    .addAttribute("umaResourceName", share.getResourceName())
+                    .addAttribute("umaResoucePAT", share.getPAT())
+                    .addAttribute("umaResourcePolicyURI", share.getPolicyURI())
+                    .addAttribute("umaResourceUserID", share.getUserId())
+                    .addAttribute("umaResourceRealm", share.getRealm())
+                    .addAttribute("umaResourceClientId", share.getClientId());
+
+            ldapConnection.add(entry);
+        }
+        finally {
+            if (null != ldapConnection) {
+                ldapConnection.close();
+            }
+        }
     }
 
     /**
@@ -74,25 +90,34 @@ public class LDAPManager {
      * @throws LdapException
      */
     ShareExt getShare(String requestURI, String resourceName, String userId, String realm, String clientId) throws LdapException {
-        String filter;
-        if (null == resourceName) {
-            filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, userId, realm, clientId);
-        } else {
-            filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceName=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, resourceName, userId, realm, clientId);
+        LdapConnection ldapConnection =null;
+        try {
+            ldapConnection = ldapClient.connect(hostname, port);
+            String filter;
+            if (null == resourceName) {
+                filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, userId, realm, clientId);
+            } else {
+                filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceName=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, resourceName, userId, realm, clientId);
+            }
+
+            Entry resultEntry = ldapConnection.searchSingleEntry(baseDN, SearchScope.WHOLE_SUBTREE, filter);
+            String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
+            String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
+            resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
+            String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
+            String policyURI = resultEntry.getAttribute("umaResourcePolicyURI").firstValueAsString();
+            userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();
+            realm = resultEntry.getAttribute("umaResourceRealm").firstValueAsString();
+            clientId = resultEntry.getAttribute("umaResourceClientId").firstValueAsString();
+
+            ShareExt share = new ShareExt(rId, resourceName, pat, requestURI, policyURI, userId, realm, clientId);
+            share.setId(id);
+            return share;
         }
-
-        Entry resultEntry = ldapConnection.searchSingleEntry(baseDN, SearchScope.WHOLE_SUBTREE, filter);
-        String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
-        String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
-        resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
-        String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
-        String policyURI = resultEntry.getAttribute("umaResourcePolicyURI").firstValueAsString();
-        userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();
-        realm = resultEntry.getAttribute("umaResourceRealm").firstValueAsString();
-        clientId = resultEntry.getAttribute("umaResourceClientId").firstValueAsString();
-
-        ShareExt share = new ShareExt(rId, resourceName, pat, requestURI, policyURI, userId, realm, clientId);
-        share.setId(id);
-        return share;
+        finally {
+            if (null != ldapConnection) {
+                ldapConnection.close();
+            }
+        }
     }
 }

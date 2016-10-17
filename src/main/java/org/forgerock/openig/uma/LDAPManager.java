@@ -84,30 +84,25 @@ public class LDAPManager {
     /**
      * Gets the ShareExt matching the requestURI
      *
-     * @param requestURI
      * @return ShareExt
      * @throws LdapException
      */
-    ShareExt getShare(String requestURI, String resourceName, String userId, String realm, String clientId) throws LdapException {
+    ShareExt getShare(ShareExt matchingShareExt) throws LdapException {
         LdapConnection ldapConnection = null;
         try {
             ldapConnection = ldapClient.connect(hostname, port);
-            String filter;
-            if (null == resourceName) {
-                filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, userId, realm, clientId);
-            } else {
-                filter = ldapClient.filter("(&(umaResourceURI=%s)(umaResourceName=%s)(umaResourceUserID=%s)(umaResourceRealm=%s)(umaResourceClientId=%s))", requestURI, resourceName, userId, realm, clientId);
-            }
+            String filter = constructSearchFilter(matchingShareExt);
 
             Entry resultEntry = ldapConnection.searchSingleEntry(baseDN, SearchScope.WHOLE_SUBTREE, filter);
             String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
             String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
-            resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
+            String requestURI = resultEntry.getAttribute("umaResourceURI").firstValueAsString();
+            String resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
             String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
             String policyURI = resultEntry.getAttribute("umaResourcePolicyURI").firstValueAsString();
-            userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();
-            realm = resultEntry.getAttribute("umaResourceRealm").firstValueAsString();
-            clientId = resultEntry.getAttribute("umaResourceClientId").firstValueAsString();
+            String userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();
+            String realm = resultEntry.getAttribute("umaResourceRealm").firstValueAsString();
+            String clientId = resultEntry.getAttribute("umaResourceClientId").firstValueAsString();
 
             ShareExt share = new ShareExt(rId, resourceName, pat, requestURI, policyURI, userId, realm, clientId);
             share.setId(id);
@@ -117,5 +112,30 @@ public class LDAPManager {
                 ldapConnection.close();
             }
         }
+    }
+
+    private String constructSearchFilter(ShareExt matchingShareExt) {
+        StringBuilder filter = new StringBuilder();
+
+        filter.append("(&");
+        if (matchingShareExt.getRequestURI() != null) {
+            filter.append("(umaResourceURI=" + matchingShareExt.getRequestURI() + ")");
+        }
+        if (matchingShareExt.getResourceName() != null) {
+            filter.append("(umaResourceName=" + matchingShareExt.getResourceName() + ")");
+        }
+        if (matchingShareExt.getUserId() != null) {
+            filter.append("(umaResourceUserID=" + matchingShareExt.getUserId() + ")");
+        }
+        if (matchingShareExt.getRealm() != null) {
+            filter.append("(umaResourceRealm=" + matchingShareExt.getRealm() + ")");
+        }
+        if (matchingShareExt.getClientId() != null) {
+            filter.append("(umaResourceClientId=" + matchingShareExt.getClientId() + ")");
+        }
+
+        filter.append(")");
+
+        return filter.toString();
     }
 }

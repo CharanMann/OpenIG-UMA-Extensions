@@ -37,6 +37,23 @@ public class ShareExt {
     /**
      * Creates ShareExt instance
      *
+     * @param requestURI
+     * @param realm
+     * @param userId
+     * @param realm
+     * @param clientId
+     */
+    public ShareExt(String resourceName, String requestURI, String userId, String realm, String clientId) {
+        this.resourceName = resourceName;
+        this.requestURI = requestURI;
+        this.realm = realm;
+        this.userId = userId;
+        this.clientId = clientId;
+    }
+
+    /**
+     * Creates ShareExt instance
+     *
      * @param resourceSetId
      * @param PAT
      * @param requestURI

@@ -25,7 +25,6 @@ import org.forgerock.http.protocol.*;
 import org.forgerock.json.JsonValue;
 import org.forgerock.json.resource.CreateRequest;
 import org.forgerock.json.resource.http.HttpContext;
-import org.forgerock.opendj.ldap.EntryNotFoundException;
 import org.forgerock.opendj.ldap.LdapException;
 import org.forgerock.openig.heap.GenericHeaplet;
 import org.forgerock.openig.heap.HeapException;
@@ -150,7 +149,7 @@ public class UmaSharingServiceExt {
                                 ldapManager.addShare(share);
                                 return share;
                             } catch (IOException e) {
-                                throw new UmaException("Can't read the CREATE resource_set response", e);
+                                throw new UmaException("Cannot register resource_set in OpenIG LDAP", e);
                             }
                         }
                         throw new UmaException("Cannot register resource_set in AS: " + response.getEntity());
@@ -161,13 +160,9 @@ public class UmaSharingServiceExt {
     private boolean isShared(final ShareExt matchingShareExt) {
         try {
             return (ldapManager.getShare(matchingShareExt) != null);
-        } catch (EntryNotFoundException e) {
+        } catch (LdapException e) {
             return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            //TODO handle this
         }
-        return false;
     }
 
     /**
@@ -241,14 +236,9 @@ public class UmaSharingServiceExt {
 
         try {
             return ldapManager.getShare(matchShareExt);
-        } catch (EntryNotFoundException e) {
-            throw new UmaException(format("Can't find any shared resource for %s", requestPath));
         } catch (LdapException e) {
-            e.printStackTrace();
-            //TODO handle this
+            throw new UmaException(format("Can't find any shared resource for %s", requestPath));
         }
-
-        throw new UmaException(format("Can't find any shared resource for %s", requestPath));
     }
 
     /**
@@ -263,6 +253,25 @@ public class UmaSharingServiceExt {
         return null;
     }
 
+    /**
+     * Returns the {@link ShareExt} with the given {@code id}.
+     *
+     * @param id Share identifier
+     * @return the {@link ShareExt} with the given {@code id} (or {@code null} if none was found).
+     */
+    public ShareExt getShare(final String id) {
+        //return shares.get(id);
+        return null;
+    }
+
+    /**
+     * Returns a copy of the list of currently managed shares.
+     *
+     * @return a copy of the list of currently managed shares.
+     */
+    public Set<ShareExt> listShares() {
+        return Collections.EMPTY_SET;
+    }
 
     /**
      * Returns the UMA authorization server base Uri.
@@ -289,26 +298,6 @@ public class UmaSharingServiceExt {
      */
     public URI getIntrospectionEndpoint() {
         return introspectionEndpoint;
-    }
-
-    /**
-     * Returns the {@link ShareExt} with the given {@code id}.
-     *
-     * @param id Share identifier
-     * @return the {@link ShareExt} with the given {@code id} (or {@code null} if none was found).
-     */
-    public ShareExt getShare(final String id) {
-        //return shares.get(id);
-        return null;
-    }
-
-    /**
-     * Returns a copy of the list of currently managed shares.
-     *
-     * @return a copy of the list of currently managed shares.
-     */
-    public Set<ShareExt> listShares() {
-        return Collections.EMPTY_SET;
     }
 
     /**
@@ -355,8 +344,8 @@ public class UmaSharingServiceExt {
             String ldapAdminPassword = config.get("ldapAdminPassword").as(evaluated()).required().asString();
             String ldapBaseDN = config.get("ldapBaseDN").as(evaluated()).defaultTo("dc=openig,dc=forgerock,dc=org").asString();
 
-            LDAPManager ldapManager = new LDAPManager(ldapHost, ldapPort, ldapAdminId, ldapAdminPassword, ldapBaseDN);
             try {
+                LDAPManager ldapManager = new LDAPManager(ldapHost, ldapPort, ldapAdminId, ldapAdminPassword, ldapBaseDN);
                 UmaSharingServiceExt service = new UmaSharingServiceExt(handler, realm,
                         uri,
                         clientId,
@@ -368,7 +357,7 @@ public class UmaSharingServiceExt {
                 logger.info(format("UMA Share endpoint available at '%s'", share.getPath()));
 
                 return service;
-            } catch (URISyntaxException e) {
+            } catch (URISyntaxException | LdapException e) {
                 throw new HeapException("Cannot build UmaSharingService", e);
             }
         }

@@ -35,18 +35,14 @@ public class LDAPManager {
     private String hostname;
     private int port;
 
-    public LDAPManager(String hostname, int port, String userName, String password, String baseDN) {
+    public LDAPManager(String hostname, int port, String userName, String password, String baseDN) throws LdapException {
         this.userName = userName;
         this.password = password;
         this.hostname = hostname;
         this.port = port;
         this.baseDN = baseDN;
-        try {
-            this.ldapClient = LdapClient.getInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-            //TODO eating exception for now
-        }
+
+        this.ldapClient = LdapClient.getInstance();
     }
 
     /**
@@ -114,10 +110,17 @@ public class LDAPManager {
         }
     }
 
+    /**
+     * Constructs LDAP filter for search
+     *
+     * @param matchingShareExt
+     * @return LDAP filter
+     */
     private String constructSearchFilter(ShareExt matchingShareExt) {
         StringBuilder filter = new StringBuilder();
 
         filter.append("(&");
+
         if (matchingShareExt.getRequestURI() != null) {
             filter.append("(umaResourceURI=" + matchingShareExt.getRequestURI() + ")");
         }

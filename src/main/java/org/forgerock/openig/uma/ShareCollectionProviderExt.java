@@ -137,7 +137,16 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
     public Promise<ResourceResponse, ResourceException> readInstance(final Context context,
                                                                      final String resourceId,
                                                                      final ReadRequest request) {
-        ShareExt share = service.getShare(resourceId);
+        final String userId = introspectToken(context);
+        if (null == userId) {
+            return new BadRequestException("Missing or expired PAT in request").asPromise();
+        }
+
+        ShareExt share = service.getShare(resourceId, userId);
+
+        if (null == share) {
+            return new NotFoundException("No resource found matching this id").asPromise();
+        }
         return newResultPromise(newResourceResponse(resourceId, null, asJson(share)));
     }
 

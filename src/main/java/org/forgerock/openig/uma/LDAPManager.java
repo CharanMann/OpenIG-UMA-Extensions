@@ -132,6 +132,9 @@ public class LDAPManager {
 
         filter.append("(&");
 
+        if (matchingShareExt.getId() != null) {
+            filter.append("(umaResourceId=" + matchingShareExt.getId() + ")");
+        }
         if (matchingShareExt.getRequestURI() != null) {
             filter.append("(umaResourceURI=" + matchingShareExt.getRequestURI() + ")");
         }

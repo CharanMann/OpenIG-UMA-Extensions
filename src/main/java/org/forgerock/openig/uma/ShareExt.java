@@ -34,6 +34,14 @@ public class ShareExt {
     private String userId;
     private String clientId;
 
+    public ShareExt(String id) {
+        if (null == id) {
+            this.id = UUID.randomUUID().toString();
+        } else {
+            this.id = id;
+        }
+    }
+
     /**
      * Creates ShareExt instance
      *

@@ -21,7 +21,10 @@ package org.forgerock.openig.uma;
 
 import org.forgerock.http.Handler;
 import org.forgerock.http.MutableUri;
-import org.forgerock.http.protocol.*;
+import org.forgerock.http.protocol.Request;
+import org.forgerock.http.protocol.Response;
+import org.forgerock.http.protocol.Responses;
+import org.forgerock.http.protocol.Status;
 import org.forgerock.json.JsonValue;
 import org.forgerock.json.resource.CreateRequest;
 import org.forgerock.json.resource.http.HttpContext;
@@ -39,8 +42,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import static java.lang.String.format;
 import static org.forgerock.json.JsonValue.*;
@@ -159,11 +162,11 @@ public class UmaSharingServiceExt {
     private boolean isShared(final ShareExt matchingShareExt) {
         try {
             return (ldapManager.getShare(matchingShareExt).size() != 0);
-        } catch (LdapException e) {
+        } catch (LdapException | NoSuchElementException e) {
             return false;
         }
     }
-    
+
     private Promise<Response, NeverThrowsException> createResourceSet(final Context context,
                                                                       final String pat,
                                                                       final JsonValue data) {
@@ -200,7 +203,7 @@ public class UmaSharingServiceExt {
 
         try {
             return ldapManager.getShare(matchShareExt).iterator().next();
-        } catch (LdapException e) {
+        } catch (LdapException | NoSuchElementException e) {
             throw new UmaException(format("Can't find any shared resource for %s", requestPath));
         }
     }
@@ -213,6 +216,7 @@ public class UmaSharingServiceExt {
      * @return the removed Share instance if found, {@code null} otherwise.
      */
     public ShareExt removeShare(String shareId) {
+
         //return shares.remove(shareId);
         return null;
     }
@@ -220,12 +224,18 @@ public class UmaSharingServiceExt {
     /**
      * Returns the {@link ShareExt} with the given {@code id}.
      *
-     * @param id Share identifier
+     * @param shareId Share identifier
      * @return the {@link ShareExt} with the given {@code id} (or {@code null} if none was found).
      */
-    public ShareExt getShare(final String id) {
-        //return shares.get(id);
-        return null;
+    public ShareExt getShare(final String shareId, String userId) {
+        ShareExt matchShareExt = new ShareExt(null, null, userId, realm, clientId);
+        matchShareExt.setId(shareId);
+
+        try {
+            return ldapManager.getShare(matchShareExt).iterator().next();
+        } catch (LdapException | NoSuchElementException e) {
+            return null;
+        }
     }
 
     /**
@@ -239,7 +249,7 @@ public class UmaSharingServiceExt {
 
         try {
             return ldapManager.getShare(matchShareExt);
-        } catch (LdapException e) {
+        } catch (LdapException | NoSuchElementException e) {
             return Collections.EMPTY_SET;
         }
     }

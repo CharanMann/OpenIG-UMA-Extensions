@@ -29,9 +29,7 @@ OpenIG Identity Store Installation & Configuration:
 
 OpenIG Use Cases testing:
 ========================= 
-Note: To disable a route: Suffix route file by '.disabled.' ,such as 04-pep-employees-logout.json.disabled. To enable this route, remove '.disabled.' suffix. 
- 
-1. OpenIG-OpenAM PEP for web applications - Minimal:
+1. 
 
 
 

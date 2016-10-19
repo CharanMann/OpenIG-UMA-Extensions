@@ -122,6 +122,26 @@ public class LDAPManager {
     }
 
     /**
+     * Removes the share from LDAP
+     *
+     * @return
+     * @throws LdapException
+     */
+    void removeShare(String id) throws LdapException {
+        LdapConnection ldapConnection = null;
+        try {
+            ldapConnection = ldapClient.connect(hostname, port);
+            ldapConnection.bind(userName, password.toCharArray());
+
+            ldapConnection.delete("umaResourceId=" + id + "," + baseDN);
+        } finally {
+            if (null != ldapConnection) {
+                ldapConnection.close();
+            }
+        }
+    }
+
+    /**
      * Constructs LDAP filter for search
      *
      * @param matchingShareExt

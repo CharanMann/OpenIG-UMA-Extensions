@@ -215,10 +215,19 @@ public class UmaSharingServiceExt {
      * @param shareId share identifier
      * @return the removed Share instance if found, {@code null} otherwise.
      */
-    public ShareExt removeShare(String shareId) {
+    public ShareExt removeShare(String shareId, final String userId) {
 
-        //return shares.remove(shareId);
-        return null;
+        try {
+            ShareExt shareExt = getShare(shareId, userId);
+
+            if (null!= shareExt) {
+                ldapManager.removeShare(shareId);
+            }
+            return shareExt;
+        } catch (LdapException | NoSuchElementException e) {
+            return null;
+        }
+
     }
 
     /**
@@ -227,7 +236,7 @@ public class UmaSharingServiceExt {
      * @param shareId Share identifier
      * @return the {@link ShareExt} with the given {@code id} (or {@code null} if none was found).
      */
-    public ShareExt getShare(final String shareId, String userId) {
+    public ShareExt getShare(final String shareId, final String userId) {
         ShareExt matchShareExt = new ShareExt(null, null, userId, realm, clientId);
         matchShareExt.setId(shareId);
 

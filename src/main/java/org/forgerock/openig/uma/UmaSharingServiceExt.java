@@ -122,14 +122,13 @@ public class UmaSharingServiceExt {
      * Registration</a>
      */
     public Promise<ShareExt, UmaException> createShare(final Context context,
-                                                       final CreateRequest createRequest) {
-
-        final String pat = OAuth2.getBearerAccessToken(((HttpContext) context.getParent()).getHeaderAsString("Authorization"));
+                                                       final CreateRequest createRequest, final String userId) {
         final String uri = createRequest.getContent().get("uri").asString();
         final String name = createRequest.getContent().get("name").asString();
         String type = createRequest.getContent().get("type").asString();
         Set<Object> scopes = createRequest.getContent().get("scopes").asSet();
-        final String userId = introspectToken(context, pat);
+
+        final String pat = OAuth2.getBearerAccessToken(((HttpContext) context.getParent()).getHeaderAsString("Authorization"));
 
         ShareExt matchShareExt = new ShareExt(name, uri, userId, realm, clientId);
 
@@ -159,47 +158,12 @@ public class UmaSharingServiceExt {
 
     private boolean isShared(final ShareExt matchingShareExt) {
         try {
-            return (ldapManager.getShare(matchingShareExt) != null);
+            return (ldapManager.getShare(matchingShareExt).size() != 0);
         } catch (LdapException e) {
             return false;
         }
     }
-
-    /**
-     * Gets the UserID from PAT
-     *
-     * @param context
-     * @param pat
-     * @return UserID from response, Null in case response is invalid
-     */
-    private String introspectToken(final Context context, final String pat) {
-        Request request = new Request();
-        request.setUri(introspectionEndpoint);
-        // Should accept a PAT as per the spec (See OPENAM-6320 / OPENAM-5928)
-        //request.getHeaders().put("Authorization", format("Bearer %s", pat));
-        request.getHeaders().put("Accept", "application/json");
-
-        Form query = new Form();
-        query.putSingle("token", pat);
-        query.putSingle("client_id", clientId);
-        query.putSingle("client_secret", clientSecret);
-        query.toRequestEntity(request);
-
-        Promise<Response, NeverThrowsException> responsePromise = protectionApiHandler.handle(context, request);
-        try {
-            Response response = responsePromise.get();
-            if ((Status.OK == response.getStatus()) && null != response.getEntity()) {
-                JsonValue value = json(response.getEntity().getJson());
-
-                // Gets the "sub" field from JSON response
-                return value.get("sub").asString();
-            }
-        } catch (IOException | ExecutionException | InterruptedException e) {
-            return null;
-        }
-        return null;
-    }
-
+    
     private Promise<Response, NeverThrowsException> createResourceSet(final Context context,
                                                                       final String pat,
                                                                       final JsonValue data) {
@@ -235,7 +199,7 @@ public class UmaSharingServiceExt {
         ShareExt matchShareExt = new ShareExt(null, requestPath, userId, realm, clientId);
 
         try {
-            return ldapManager.getShare(matchShareExt);
+            return ldapManager.getShare(matchShareExt).iterator().next();
         } catch (LdapException e) {
             throw new UmaException(format("Can't find any shared resource for %s", requestPath));
         }
@@ -269,8 +233,15 @@ public class UmaSharingServiceExt {
      *
      * @return a copy of the list of currently managed shares.
      */
-    public Set<ShareExt> listShares() {
-        return Collections.EMPTY_SET;
+    public Set<ShareExt> listShares(String userId) {
+
+        ShareExt matchShareExt = new ShareExt(null, null, userId, realm, clientId);
+
+        try {
+            return ldapManager.getShare(matchShareExt);
+        } catch (LdapException e) {
+            return Collections.EMPTY_SET;
+        }
     }
 
     /**
@@ -316,6 +287,10 @@ public class UmaSharingServiceExt {
      */
     public String getClientSecret() {
         return clientSecret;
+    }
+
+    public Handler getProtectionApiHandler() {
+        return protectionApiHandler;
     }
 
 

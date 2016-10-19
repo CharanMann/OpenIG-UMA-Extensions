@@ -19,12 +19,14 @@
 
 package org.forgerock.openig.uma;
 
-import org.forgerock.opendj.ldap.Entry;
-import org.forgerock.opendj.ldap.LdapException;
-import org.forgerock.opendj.ldap.LinkedHashMapEntry;
-import org.forgerock.opendj.ldap.SearchScope;
+import org.forgerock.opendj.ldap.*;
+import org.forgerock.opendj.ldap.responses.SearchResultEntry;
+import org.forgerock.opendj.ldif.ConnectionEntryReader;
 import org.forgerock.openig.ldap.LdapClient;
 import org.forgerock.openig.ldap.LdapConnection;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class LDAPManager {
 
@@ -80,29 +82,38 @@ public class LDAPManager {
     /**
      * Gets the ShareExt matching the requestURI
      *
-     * @return ShareExt
+     * @return List of matching shares
      * @throws LdapException
      */
-    ShareExt getShare(ShareExt matchingShareExt) throws LdapException {
+    Set<ShareExt> getShare(ShareExt matchingShareExt) throws LdapException {
         LdapConnection ldapConnection = null;
         try {
             ldapConnection = ldapClient.connect(hostname, port);
             String filter = constructSearchFilter(matchingShareExt);
+            Set<ShareExt> shares = new HashSet<>();
 
-            Entry resultEntry = ldapConnection.searchSingleEntry(baseDN, SearchScope.WHOLE_SUBTREE, filter);
-            String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
-            String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
-            String requestURI = resultEntry.getAttribute("umaResourceURI").firstValueAsString();
-            String resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
-            String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
-            String policyURI = resultEntry.getAttribute("umaResourcePolicyURI").firstValueAsString();
-            String userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();
-            String realm = resultEntry.getAttribute("umaResourceRealm").firstValueAsString();
-            String clientId = resultEntry.getAttribute("umaResourceClientId").firstValueAsString();
+            ConnectionEntryReader connectionEntryReader = ldapConnection.search(baseDN, SearchScope.WHOLE_SUBTREE, filter);
+            while (connectionEntryReader.hasNext()) {
+                SearchResultEntry resultEntry = connectionEntryReader.readEntry();
+                String id = resultEntry.getAttribute("umaResourceId").firstValueAsString();
+                String rId = resultEntry.getAttribute("umaResourceSetId").firstValueAsString();
+                String requestURI = resultEntry.getAttribute("umaResourceURI").firstValueAsString();
+                String resourceName = resultEntry.getAttribute("umaResourceName").firstValueAsString();
+                String pat = resultEntry.getAttribute("umaResoucePAT").firstValueAsString();
+                String policyURI = resultEntry.getAttribute("umaResourcePolicyURI").firstValueAsString();
+                String userId = resultEntry.getAttribute("umaResourceUserID").firstValueAsString();
+                String realm = resultEntry.getAttribute("umaResourceRealm").firstValueAsString();
+                String clientId = resultEntry.getAttribute("umaResourceClientId").firstValueAsString();
 
-            ShareExt share = new ShareExt(rId, resourceName, pat, requestURI, policyURI, userId, realm, clientId);
-            share.setId(id);
-            return share;
+                ShareExt share = new ShareExt(rId, resourceName, pat, requestURI, policyURI, userId, realm, clientId);
+                share.setId(id);
+
+                shares.add(share);
+            }
+
+            return shares;
+        } catch (SearchResultReferenceIOException e) {
+            throw LdapException.newLdapException(ResultCode.UNAVAILABLE, e);
         } finally {
             if (null != ldapConnection) {
                 ldapConnection.close();

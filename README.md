@@ -4,6 +4,8 @@ OpenIG UMA Extensions for: <br />
 1. Realm support <br />
 2. Extend OpenIG-UMA REST endpoint <br /> 
 3. User friendly UMA Resource name <br />
+4. Persisting UMA RS id and PAT in OpenDJ <br />
+5. Authentication for OpenIG-UMA REST endpoints using PAT <br />
 
 Work in progress ...
 

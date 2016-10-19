@@ -19,11 +19,20 @@
 
 package org.forgerock.openig.uma;
 
+import org.forgerock.http.protocol.Form;
+import org.forgerock.http.protocol.Request;
+import org.forgerock.http.protocol.Status;
 import org.forgerock.json.JsonValue;
 import org.forgerock.json.resource.*;
+import org.forgerock.json.resource.http.HttpContext;
+import org.forgerock.openig.oauth2.OAuth2;
 import org.forgerock.services.context.Context;
 import org.forgerock.util.Function;
+import org.forgerock.util.promise.NeverThrowsException;
 import org.forgerock.util.promise.Promise;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import static java.lang.String.format;
 import static org.forgerock.json.JsonValue.*;
@@ -46,7 +55,7 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
     }
 
     private static JsonValue asJson(final ShareExt share) {
-        return json(object(field("id", share.getId()),
+        return json(object(
                 field("resourceURI", share.getRequestURI()),
                 field("user_access_policy_uri", share.getPolicyURI()),
                 field("pat", share.getPAT()),
@@ -63,7 +72,12 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
             return new NotSupportedException("Only POST-style of instance creation are supported").asPromise();
         }
 
-        return service.createShare(context, request)
+        final String userId = introspectToken(context);
+        if (null == userId) {
+            return new NotSupportedException("Valid PAT is required").asPromise();
+        }
+
+        return service.createShare(context, request, userId)
                 .then(new Function<ShareExt, ResourceResponse, ResourceException>() {
                     @Override
                     public ResourceResponse apply(final ShareExt share) throws ResourceException {
@@ -107,7 +121,12 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
             return new NotSupportedException("Only accept queries with filter=true").asPromise();
         }
 
-        for (ShareExt share : service.listShares()) {
+        final String userId = introspectToken(context);
+        if (null == userId) {
+            return new BadRequestException("Missing or expired PAT in request").asPromise();
+        }
+
+        for (ShareExt share : service.listShares(userId)) {
             handler.handleResource(newResourceResponse(share.getId(), null, asJson(share)));
         }
 
@@ -140,5 +159,45 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
                                                                      final String resourceId,
                                                                      final ActionRequest request) {
         return new NotSupportedException().asPromise();
+    }
+
+    /**
+     * Gets the UserID from PAT
+     *
+     * @param context
+     * @return UserID from response, Null in case response is invalid
+     */
+    private String introspectToken(final Context context) {
+        Request request = new Request();
+
+        final String pat = OAuth2.getBearerAccessToken(((HttpContext) context.getParent()).getHeaderAsString("Authorization"));
+        if (null == pat) {
+            return null;
+        }
+
+        request.setUri(service.getIntrospectionEndpoint());
+        // Should accept a PAT as per the spec (See OPENAM-6320 / OPENAM-5928)
+        //request.getHeaders().put("Authorization", format("Bearer %s", pat));
+        request.getHeaders().put("Accept", "application/json");
+
+        Form query = new Form();
+        query.putSingle("token", pat);
+        query.putSingle("client_id", service.getClientId());
+        query.putSingle("client_secret", service.getClientSecret());
+        query.toRequestEntity(request);
+
+        Promise<org.forgerock.http.protocol.Response, NeverThrowsException> responsePromise = service.getProtectionApiHandler().handle(context, request);
+        try {
+            org.forgerock.http.protocol.Response response = responsePromise.get();
+            if ((Status.OK == response.getStatus()) && null != response.getEntity()) {
+                JsonValue value = json(response.getEntity().getJson());
+
+                // Gets the "sub" field from JSON response
+                return value.get("sub").asString();
+            }
+        } catch (IOException | ExecutionException | InterruptedException e) {
+            return null;
+        }
+        return null;
     }
 }

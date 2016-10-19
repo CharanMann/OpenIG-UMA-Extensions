@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -133,11 +132,9 @@ public class UmaSharingServiceExt {
 
         final String pat = OAuth2.getBearerAccessToken(((HttpContext) context.getParent()).getHeaderAsString("Authorization"));
 
-        ShareExt matchShareExt = new ShareExt(name, uri, userId, realm, clientId);
-
-        if (isShared(matchShareExt)) {
+        if (isShared(name, uri, userId)) {
             // We do not accept re-sharing or post-creation resource_set configuration
-            return newExceptionPromise(new UmaException(format("Resource %s is already shared", uri)));
+            return newExceptionPromise(new UmaException(format("Share already exists with similar name: %s or uri: %s ", name, uri)));
         }
 
         return createResourceSet(context, pat, resourceSet(name, scopes, type))
@@ -159,12 +156,33 @@ public class UmaSharingServiceExt {
                 }, Responses.<ShareExt, UmaException>noopExceptionFunction());
     }
 
-    private boolean isShared(final ShareExt matchingShareExt) {
+    /**
+     * Check the share already exists with same share name or URI for a given user / realm / OAuth Client
+     *
+     * @param name
+     * @param uri
+     * @param userId
+     * @return true if matching share exists; false otherwise
+     */
+    private boolean isShared(String name, String uri, String userId) {
         try {
-            return (ldapManager.getShare(matchingShareExt).size() != 0);
-        } catch (LdapException | NoSuchElementException e) {
+            // Pass 1
+            ShareExt matchingShareExt = new ShareExt(name, null, userId, realm, clientId);
+            if (ldapManager.getShare(matchingShareExt).size() != 0) {
+                return true;
+            }
+
+            // Pass 2
+            matchingShareExt = new ShareExt(null, uri, userId, realm, clientId);
+            if (ldapManager.getShare(matchingShareExt).size() != 0) {
+                return true;
+            }
+
+            //TODO Better option is to optimize LDAP filter for above search
+        } catch (LdapException e) {
             return false;
         }
+        return false;
     }
 
     private Promise<Response, NeverThrowsException> createResourceSet(final Context context,
@@ -202,10 +220,14 @@ public class UmaSharingServiceExt {
         ShareExt matchShareExt = new ShareExt(null, requestPath, userId, realm, clientId);
 
         try {
-            return ldapManager.getShare(matchShareExt).iterator().next();
-        } catch (LdapException | NoSuchElementException e) {
+            Set<ShareExt> shares = ldapManager.getShare(matchShareExt);
+            if (shares.size() != 0) {
+                return shares.iterator().next();
+            }
+        } catch (LdapException e) {
             throw new UmaException(format("Can't find any shared resource for %s", requestPath));
         }
+        throw new UmaException(format("Can't find any shared resource for %s", requestPath));
     }
 
     /**
@@ -220,11 +242,11 @@ public class UmaSharingServiceExt {
         try {
             ShareExt shareExt = getShare(shareId, userId);
 
-            if (null!= shareExt) {
+            if (null != shareExt) {
                 ldapManager.removeShare(shareId);
             }
             return shareExt;
-        } catch (LdapException | NoSuchElementException e) {
+        } catch (LdapException e) {
             return null;
         }
 
@@ -241,10 +263,14 @@ public class UmaSharingServiceExt {
         matchShareExt.setId(shareId);
 
         try {
-            return ldapManager.getShare(matchShareExt).iterator().next();
-        } catch (LdapException | NoSuchElementException e) {
+            Set<ShareExt> shares = ldapManager.getShare(matchShareExt);
+            if (shares.size() != 0) {
+                return shares.iterator().next();
+            }
+        } catch (LdapException e) {
             return null;
         }
+        return null;
     }
 
     /**
@@ -258,7 +284,7 @@ public class UmaSharingServiceExt {
 
         try {
             return ldapManager.getShare(matchShareExt);
-        } catch (LdapException | NoSuchElementException e) {
+        } catch (LdapException e) {
             return Collections.EMPTY_SET;
         }
     }

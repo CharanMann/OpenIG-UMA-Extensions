@@ -74,7 +74,7 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
 
         final String userId = introspectToken(context);
         if (null == userId) {
-            return new NotSupportedException("Valid PAT is required").asPromise();
+            return new BadRequestException("Missing or expired PAT in request").asPromise();
         }
 
         return service.createShare(context, request, userId)
@@ -86,7 +86,7 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
                 }, new Function<UmaException, ResourceResponse, ResourceException>() {
                     @Override
                     public ResourceResponse apply(final UmaException exception) throws ResourceException {
-                        throw new BadRequestException("Failed to create a share", exception);
+                        throw new BadRequestException("Failed to create a share, Reason: " + exception.getMessage(), exception);
                     }
                 });
     }

@@ -69,11 +69,14 @@ import static org.forgerock.util.Utils.closeSilently;
  * <p>
  * <pre>
  *     {@code {
- *         "type": "UmaFilter",
- *         "config": {
- *           "protectionApiHandler": "HttpsClient",
- *           "umaService": "UmaService"
- *         }
+ *           "type": "UmaFilter",
+ *           "config": {
+ *           "protectionApiHandler": "ClientHandler",
+ *           "umaService": "UmaServiceExt",
+ *           "scopes" : [
+ *               "http://login.example.com/scopes/view"
+ *           ]
+ *           }
  *       }
  *     }
  * </pre>

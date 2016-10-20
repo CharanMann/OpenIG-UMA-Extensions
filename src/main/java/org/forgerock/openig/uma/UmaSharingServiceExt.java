@@ -63,7 +63,41 @@ import static org.forgerock.openig.util.JsonValues.requiredHeapObject;
 import static org.forgerock.util.promise.Promises.newExceptionPromise;
 
 /**
- * Extension of {@code UmaSharingService}. Adds: Support for realm
+ * An {@link UmaSharingService} provides core UMA features to OpenIG when acting as an UMA Resource Server.
+ *
+ * <p>It is linked to a single UMA Authorization Server and needs to be pre-registered as an OAuth 2.0 client on that
+ * AS.
+ *
+ * <p>It is also the place where protected application knowledge is described: each item of the {@code resources}
+ * array describe a resource set (that can be composed of multiple endpoints) that share the same set of scopes.
+ *
+ * <p>Each resource contains a {@code pattern} used to define which one of them to use when a {@link Share} is
+ * {@linkplain #createShare(Context, CreateRequest, String) created}. A resource also contains a list of {@code actions} that
+ * defines the set of scopes to require when a requesting party request comes in.
+ *
+ * <pre>
+ *     {@code {
+ *           "name": "UmaServiceExt",
+ *           "type": "UmaServiceExt",
+ *           "config": {
+ *               "protectionApiHandler": "ClientHandler",
+ *               "authorizationServerUri": "http://openam135.sample.com:8080/openam/",
+ *               "realm": "/employees",
+ *               "clientId": "OpenIG_RS",
+ *               "clientSecret": "password",
+ *               "ldapHost": "192.168.56.122",
+ *               "ldapPort": 3389,
+ *               "ldapAdminId": "cn=Directory Manager",
+ *               "ldapAdminPassword": "cangetindj",
+ *               "ldapBaseDN": "dc=openig,dc=forgerock,dc=org"
+ *       }
+ *     }
+ * </pre>
+ *
+ * Along with the {@code UmaService}, a REST endpoint is deployed in OpenIG's API namespace:
+ * {@literal /openig/api/system/objects/../objects/[name-of-the-uma-service-object]/share}.
+ * The dotted segment depends on your deployment (like which RouterHandler hosts the route that
+ * in turns contains this object).
  */
 public class UmaSharingServiceExt {
 

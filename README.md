@@ -1,11 +1,12 @@
 # OpenIG-UMA-Extensions
 
-OpenIG UMA Extensions for: <br />
+OpenIG UMA Service and Filter Extensions for: <br />
 1. Realm support <br />
 2. Extend OpenIG-UMA REST endpoint <br /> 
 3. User friendly UMA Resource name <br />
 4. Persisting UMA RS id and PAT in OpenDJ <br />
 5. Authentication for OpenIG-UMA REST endpoints using PAT <br />
+6. //TODO Automatic refresh of PAT  <br />
 
 
 Pre-requisites :
@@ -47,7 +48,33 @@ OpenIG Use Cases testing:
 
 OpenIG-UMA endpoints:
 ===================== 
-1. 
+1. Create share. UMA shares need to have unique uri and name. Note that this restriction is per uid per realm per OAuth Client. In other words user with uid 'alice' can create UMA shares   
+```
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" -d '{
+	 "uri" : "/photoAlbum",
+     "name" : "PhotoAlbum",
+     "scopes" : [
+         "http://photoz.sample.com/scopes/view",
+         "http://photoz.sample.com/scopes/all"
+     ],
+     "type" : "http://photoz.sample.com"
+ }' "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share?_action=create"
+ 
+{
+  "_id": "b3400172-90a5-4c7f-8c0f-c5b35ea7e11c",
+  "resourceURI": "/photoAlbum",
+  "user_access_policy_uri": "http://openam135.sample.com:8080/openam/XUI/?realm=/employees#uma/share/1c62792d-4a88-455b-bf7d-9c6ac1433bc55",
+  "pat": "8751ca72-3925-4528-b14c-5750f12ab0ac",
+  "resource_set_id": "1c62792d-4a88-455b-bf7d-9c6ac1433bc55",
+  "userId": "alice",
+  "realm": "/employees",
+  "client_id": "OpenIG_RS"
+} 
+```
+2. Read all shares:
+
+3. Read specific share
+4. Delete specific share  
 
 
 

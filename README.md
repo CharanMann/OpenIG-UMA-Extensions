@@ -6,7 +6,7 @@ OpenIG UMA Service and Filter Extensions for: <br />
 3. User friendly UMA Resource name <br />
 4. Persisting UMA RS id and PAT in OpenDJ <br />
 5. Authentication for OpenIG-UMA REST endpoints using PAT <br />
-6. //TODO Automatic refresh of PAT  <br />
+6. //TODO Automatic refresh of PAT, handling expired PAT  <br />
 
 
 Pre-requisites :
@@ -39,7 +39,7 @@ OpenIG Configuration:
 2. Stop OpenIG. 
 3. Copy openig-uma-ext-1.0.jar to <OpenIG-TomcatHome>/webapps/ROOT/WEB-INF/lib
 4. Copy openig/config/routes/01-uma.json to OpenIG routes directory, Some details on this route: <br />
-   * UmaServiceExt config, we can configure LDAP detials here:
+   * UmaServiceExt config, we can configure LDAP details here:
    ```
        {
          "name": "UmaServiceExt",
@@ -47,7 +47,7 @@ OpenIG Configuration:
          "config": {
            "protectionApiHandler": "ClientHandler",
            "authorizationServerUri": "http://openam135.sample.com:8080/openam/",
-   	    "realm": "/employees",
+   	       "realm": "/employees",
            "clientId": "OpenIG_RS",
            "clientSecret": "password",
            "ldapHost": "192.168.56.122",
@@ -104,7 +104,6 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <Vali
   "client_id": "OpenIG_RS"
 } 
 ```
-
 2. Read all shares:
 ```
 curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share?_queryFilter=true"
@@ -129,7 +128,6 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid
   "remainingPagedResults": -1
 }
 ```
-
 3. Read specific share. Note that this requires <OpenIG-ResourceId> in REST URL. 
 ```
 curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share/<OpenIG-ResourceId>"
@@ -145,7 +143,6 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid
   "client_id": "OpenIG_RS"
 }
 ```
-
 4. Delete specific share. Note that this requires <OpenIG-ResourceId> in REST URL.
 ```
 curl -X DELETE -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" -d '' "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share/<OpenIG-ResourceId>"

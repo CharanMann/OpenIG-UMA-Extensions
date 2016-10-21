@@ -1,12 +1,13 @@
 # OpenIG-UMA-Extensions
 
+Current OpenIG-UMA has some limitations: https://backstage.forgerock.com/#!/docs/openig/4.5/gateway-guide#uma-limitations ; this extension cover some of these limitations. <br />
+
 OpenIG UMA Service and Filter Extensions for: <br />
 1. Realm support <br />
-2. Extend OpenIG-UMA REST endpoint <br /> 
+2. Extend OpenIG-UMA REST endpoint: Authentication using PAT <br /> 
 3. User friendly UMA Resource name <br />
 4. Persisting UMA RS id and PAT in OpenDJ <br />
-5. Authentication for OpenIG-UMA REST endpoints using PAT <br />
-6. //TODO Automatic refresh of PAT, handling expired PAT  <br />
+5. //TODO Automatic refresh of PAT, handling expired PAT  <br />
 
 
 Pre-requisites :
@@ -70,6 +71,12 @@ OpenIG Configuration:
             ]
           }
         }
+   ```
+   * When client (bob) access this share; client needs to specify {"userId": "alice"} as request data. This helps OpenIG UMA RS to locate the particular resource. 
+   ```
+        url: resource_url,
+        type: "GET",
+        data: {"userId": "alice"}
    ```
       
 OpenIG Use Cases testing:

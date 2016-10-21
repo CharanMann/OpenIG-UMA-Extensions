@@ -6,7 +6,7 @@ OpenIG UMA Service and Filter Extensions for: <br />
 1. Realm support <br />
 2. Extend OpenIG-UMA REST endpoint: Authentication using PAT <br /> 
 3. User friendly UMA Resource name <br />
-4. Persisting UMA RS id and PAT in OpenDJ <br />
+4. Persisting UMA ResourceSet id and PAT in OpenDJ <br />
 5. //TODO Automatic refresh of PAT, handling expired PAT  <br />
 
 
@@ -32,6 +32,8 @@ OpenDJ UMA RS store Installation & Configuration:
    * Directory Data:                Backend Type: JE Backend, 
                                     Create New Base DN dc=openig,dc=forgerock,dc=org
    * Base DN Data: Only Create Base Entry (dc=openig,dc=forgerock,dc=org)
+2. Copy 99-user.ldif schema to <OPENDJ-HOME>/config/schema.
+3. Restart OpenDJ.
 
 
 OpenIG Configuration:

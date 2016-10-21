@@ -28,7 +28,7 @@ OpenDJ UMA RS store Installation & Configuration:
    * LDAP Listener Port:            3389
    * Administration Connector Port: 4444
    * SSL/TLS:                       disabled
-   * Directory Data:                Backend Type: JE Backend
+   * Directory Data:                Backend Type: JE Backend, 
                                     Create New Base DN dc=openig,dc=forgerock,dc=org
    * Base DN Data: Only Create Base Entry (dc=openig,dc=forgerock,dc=org)
 
@@ -38,17 +38,50 @@ OpenIG Configuration:
 1. Build OpenIG-UMA extension by running 'mvn clean install'. This will build openig-uma-ext-1.0.jar under /target directory.
 2. Stop OpenIG. 
 3. Copy openig-uma-ext-1.0.jar to <OpenIG-TomcatHome>/webapps/ROOT/WEB-INF/lib
-4. Copy openig/config/routes/01-uma.json to OpenIG routes directory
-
-
+4. Copy openig/config/routes/01-uma.json to OpenIG routes directory, Some details on this route: <br />
+   * UmaServiceExt config, we can configure LDAP detials here:
+   ```
+       {
+         "name": "UmaServiceExt",
+         "type": "UmaServiceExt",
+         "config": {
+           "protectionApiHandler": "ClientHandler",
+           "authorizationServerUri": "http://openam135.sample.com:8080/openam/",
+   	    "realm": "/employees",
+           "clientId": "OpenIG_RS",
+           "clientSecret": "password",
+           "ldapHost": "192.168.56.122",
+           "ldapPort": 3389,
+           "ldapAdminId": "cn=Directory Manager",
+           "ldapAdminPassword": "cangetindj",
+           "ldapBaseDN": "dc=openig,dc=forgerock,dc=org"
+         }
+       }
+   ```
+   * UmaFilterExt config, we can configure scope required for this filter here:
+   ```
+        {
+          "type": "UmaFilterExt",
+          "config": {
+            "protectionApiHandler": "ClientHandler",
+            "umaService": "UmaServiceExt",
+            "scopes" : [
+              "http://login.example.com/scopes/view"
+            ]
+          }
+        }
+   ```
+      
 OpenIG Use Cases testing:
 =========================
 1. /uma folder updates are required in openig-doc-4.5.0-jar-with-dependencies.jar. Unpack this jar and replace /uma folder contents with /openig-doc-ext/uma files. If required; update common.js configs like OpenAM url etc. 
 2. Execute this for testing OpenIG-UMA usecases: https://backstage.forgerock.com/#!/docs/openig/4.5/gateway-guide#uma-trying-it-out
 
-OpenIG-UMA endpoints:
-===================== 
-1. Create share. UMA shares need to have unique uri and name. Note that this restriction is per uid per realm per OAuth Client. In other words user with uid 'alice' can create UMA shares   
+OpenIG-UMA REST endpoints:
+==========================
+All below REST endpoints require valid PAT in Authorization header. 
+ 
+1. Create share. UMA shares need to have unique uri and name. Note that this restriction is per uid per realm per OAuth Client. In other words if user with uid 'alice' (in realm /employees and and using OAuth Client: OpenIG_RS) has created UMA share with name: app1 and uri: /app1, then she can't create share with name: app1 and uri /app2 (or name: app2 and uri /app1) but alice in /customer realm can create such share.
 ```
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" -d '{
 	 "uri" : "/photoAlbum",
@@ -71,12 +104,63 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <Vali
   "client_id": "OpenIG_RS"
 } 
 ```
+
 2. Read all shares:
+```
+curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share?_queryFilter=true"
+ 
+{
+  "result": [
+    {
+      "_id": "4b179c9f-823a-4e62-bc7a-fe51929d41a7",
+      "resourceURI": "/login",
+      "user_access_policy_uri": "http://openam135.sample.com:8080/openam/XUI/?realm=/employees#uma/share/cae0104a-668a-4f07-948e-0a843f8c89823",
+      "pat": "38909fe9-c18e-45c1-9b46-509313e99144",
+      "resource_set_id": "cae0104a-668a-4f07-948e-0a843f8c89823",
+      "userId": "alice",
+      "realm": "/employees",
+      "client_id": "OpenIG_RS"
+    }
+  ],
+  "resultCount": 1,
+  "pagedResultsCookie": null,
+  "totalPagedResultsPolicy": "NONE",
+  "totalPagedResults": -1,
+  "remainingPagedResults": -1
+}
+```
 
-3. Read specific share
-4. Delete specific share  
+3. Read specific share. Note that this requires <OpenIG-ResourceId> in REST URL. 
+```
+curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share/<OpenIG-ResourceId>"
 
+{
+  "_id": "4b179c9f-823a-4e62-bc7a-fe51929d41a7",
+  "resourceURI": "/login",
+  "user_access_policy_uri": "http://openam135.sample.com:8080/openam/XUI/?realm=/employees#uma/share/cae0104a-668a-4f07-948e-0a843f8c89823",
+  "pat": "38909fe9-c18e-45c1-9b46-509313e99144",
+  "resource_set_id": "cae0104a-668a-4f07-948e-0a843f8c89823",
+  "userId": "alice",
+  "realm": "/employees",
+  "client_id": "OpenIG_RS"
+}
+```
 
+4. Delete specific share. Note that this requires <OpenIG-ResourceId> in REST URL.
+```
+curl -X DELETE -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" -d '' "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share/<OpenIG-ResourceId>"
+
+{
+  "_id": "4b179c9f-823a-4e62-bc7a-fe51929d41a7",
+  "resourceURI": "/login",
+  "user_access_policy_uri": "http://openam135.sample.com:8080/openam/XUI/?realm=/employees#uma/share/cae0104a-668a-4f07-948e-0a843f8c89823",
+  "pat": "38909fe9-c18e-45c1-9b46-509313e99144",
+  "resource_set_id": "cae0104a-668a-4f07-948e-0a843f8c89823",
+  "userId": "alice",
+  "realm": "/employees",
+  "client_id": "OpenIG_RS"
+}
+```
 
 
 * * *

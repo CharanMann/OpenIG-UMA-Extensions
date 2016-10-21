@@ -81,7 +81,7 @@ OpenIG-UMA REST endpoints:
 ==========================
 All below REST endpoints require valid PAT in Authorization header. 
  
-1. Create share. UMA shares need to have unique uri and name. Note that this restriction is per uid per realm per OAuth Client. In other words if user with uid 'alice' (in realm /employees and and using OAuth Client: OpenIG_RS) has created UMA share with name: app1 and uri: /app1, then she can't create share with name: app1 and uri /app2 (or name: app2 and uri /app1) but alice in /customer realm can create such share.
+* Create share. UMA shares need to have unique uri and name. Note that this restriction is per uid per realm per OAuth Client. In other words if user with uid 'alice' (in realm /employees and and using OAuth Client: OpenIG_RS) has created UMA share with name: app1 and uri: /app1, then she can't create share with name: app1 and uri /app2 (or name: app2 and uri /app1) but alice in /customer realm can create such share.
 ```
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" -d '{
 	 "uri" : "/photoAlbum",
@@ -104,7 +104,7 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <Vali
   "client_id": "OpenIG_RS"
 } 
 ```
-2. Read all shares:
+* Read all shares:
 ```
 curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share?_queryFilter=true"
  
@@ -128,7 +128,7 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid
   "remainingPagedResults": -1
 }
 ```
-3. Read specific share. Note that this requires <OpenIG-ResourceId> in REST URL. 
+* Read specific share. Note that this requires <OpenIG-ResourceId> in REST URL. 
 ```
 curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share/<OpenIG-ResourceId>"
 
@@ -143,7 +143,7 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid
   "client_id": "OpenIG_RS"
 }
 ```
-4. Delete specific share. Note that this requires <OpenIG-ResourceId> in REST URL.
+* Delete specific share. Note that this requires <OpenIG-ResourceId> in REST URL.
 ```
 curl -X DELETE -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" -d '' "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share/<OpenIG-ResourceId>"
 

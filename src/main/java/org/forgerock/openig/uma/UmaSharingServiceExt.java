@@ -420,7 +420,7 @@ public class UmaSharingServiceExt {
                 logger.info(format("UMA Share endpoint available at '%s'", share.getPath()));
 
                 return service;
-            } catch (URISyntaxException | LdapException e) {
+            } catch (URISyntaxException e) {
                 throw new HeapException("Cannot build UmaSharingService", e);
             }
         }

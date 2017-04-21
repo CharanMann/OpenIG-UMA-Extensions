@@ -34,12 +34,7 @@
     <orderEntry type="library" name="Maven: de.odysseus.juel:juel-api:2.2.7" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.groovy:groovy-all:2.4.6" level="project" />
     <orderEntry type="library" name="Maven: org.apache.ivy:ivy:2.4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.forgerock.opendj:opendj-core:3.5.0" level="project" />
-    <orderEntry type="library" name="Maven: org.forgerock.commons:i18n-core:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: org.forgerock.commons:i18n-slf4j:1.4.2" level="project" />
-    <orderEntry type="library" name="Maven: com.github.stephenc.jcip:jcip-annotations:1.0-1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.forgerock.opendj:opendj-grizzly:3.5.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.glassfish.grizzly:grizzly-framework:2.3.24" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.commons:json-web-token:20.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.commons:forgerock-audit-core:20.1.0" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.1" level="project" />
@@ -54,5 +49,11 @@
     <orderEntry type="library" name="Maven: org.forgerock.openig:openig-uma:4.5.0" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.openig:openig-toolkit:4.5.2" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.commons:json-resource:20.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.forgerock.opendj:opendj-ldap-sdk:2.6.11" level="project" />
+    <orderEntry type="library" name="Maven: org.forgerock.commons:i18n-core:1.4.1" level="project" />
+    <orderEntry type="library" name="Maven: org.glassfish.grizzly:grizzly-framework:2.3.11" level="project" />
+    <orderEntry type="library" name="Maven: org.forgerock.opendj:opendj-core:3.5.1" level="project" />
+    <orderEntry type="library" name="Maven: org.forgerock.commons:i18n-slf4j:1.4.2" level="project" />
+    <orderEntry type="library" name="Maven: com.github.stephenc.jcip:jcip-annotations:1.0-1" level="project" />
   </component>
 </module>

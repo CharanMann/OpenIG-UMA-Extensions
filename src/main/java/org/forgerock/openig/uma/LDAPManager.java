@@ -46,7 +46,7 @@ public class LDAPManager {
     private String hostname;
     private int port;
 
-    public LDAPManager(String hostname, int port, String userName, String password, String baseDN) throws LdapException {
+    public LDAPManager(String hostname, int port, String userName, String password, String baseDN)  {
         this.userName = userName;
         this.password = password;
         this.hostname = hostname;
@@ -121,7 +121,7 @@ public class LDAPManager {
             }
 
             return shares;
-        } catch (SearchResultReferenceIOException e) {
+        } catch (SearchResultReferenceIOException | ErrorResultIOException e) {
             throw LdapException.newLdapException(ResultCode.UNAVAILABLE, e);
         } finally {
             if (null != ldapConnection) {

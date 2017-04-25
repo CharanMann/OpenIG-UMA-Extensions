@@ -1,0 +1,47 @@
+{
+  "heap": [
+    {
+      "name": "UmaServiceExt",
+      "type": "UmaServiceExt",
+      "config": {
+        "protectionApiHandler": "ClientHandler",
+        "authorizationServerUri": "http://openam135.sample.com:8080/openam/",
+	    "realm": "/employees",
+        "clientId": "OpenIG_RS",
+        "clientSecret": "password",
+        "ldapHost": "192.168.56.122",
+        "ldapPort": 3389,
+        "ldapAdminId": "cn=Directory Manager",
+        "ldapAdminPassword": "cangetindj",
+        "ldapBaseDN": "dc=openig,dc=forgerock,dc=org"
+      }
+    }
+  ],
+  "handler": {
+    "type": "Chain",
+    "config": {
+      "filters": [
+        {
+          "type": "ScriptableFilter",
+          "config": {
+            "type": "application/x-groovy",
+            "file": "CorsFilter.groovy"
+          }
+        },
+        {
+          "type": "UmaFilterExt",
+          "config": {
+            "protectionApiHandler": "ClientHandler",
+            "umaService": "UmaServiceExt",
+            "scopes" : [
+              "http://apis.example.net/scopes/write"
+            ]
+          }
+        }
+      ],
+      "handler": "ClientHandler"
+    }
+  },
+  "baseURI": "http://apis.example.net:8010",
+  "condition": "${matches(request.uri.path, '^/history') and (request.headers['sRequest'][0] == 'write')}"
+}

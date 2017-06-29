@@ -1,4 +1,5 @@
 {
+  "name": "uma-api",
   "handler": {
     "type": "Chain",
     "config": {
@@ -15,15 +16,12 @@
           "config": {
             "protectionApiHandler": "ClientHandler",
             "umaService": "UmaServiceExt",
-            "scopes" : [
-              "http://apis.example.net/scopes/write"
-            ]
+            "scopes" : []
           }
         }
       ],
       "handler": "ClientHandler"
     }
   },
-  "baseURI": "http://apis.example.net:8010",
-  "condition": "${matches(request.uri.path, '^/history') and (request.headers['scope'][0] == 'write')}"
+  "condition": "${matches(request.uri.path, '^/openig/api')}"
 }

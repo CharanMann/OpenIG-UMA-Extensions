@@ -1,27 +1,19 @@
 /*
- * Copyright © 2016 ForgeRock, AS.
+ * Copyright © 2017 ForgeRock, AS.
  *
- * This is unsupported code made available by ForgeRock for community development subject to the license detailed below.
- * The code is provided on an "as is" basis, without warranty of any kind, to the fullest extent permitted by law.
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance with the
+ * License.
  *
- * ForgeRock does not warrant or guarantee the individual success developers may have in implementing the code on their
- * development platforms or in production configurations.
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+ * specific language governing permission and limitations under the License.
  *
- * ForgeRock does not warrant, guarantee or make any representations regarding the use, results of use, accuracy, timeliness
- * or completeness of any data or information relating to the alpha release of unsupported code. ForgeRock disclaims all
- * warranties, expressed or implied, and in particular, disclaims all warranties of merchantability, and warranties related
- * to the code, or any service or software related thereto.
+ * When distributing Covered Software, include this CDDL Header Notice in each file and include
+ * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+ * Header, with the fields enclosed by brackets [] replaced by your own identifying
+ * information: "Portions copyright [year] [name of copyright owner]".
  *
- * ForgeRock shall not be liable for any direct, indirect or consequential damages or costs of any type arising out of any
- * action taken by you or others related to the code.
- *
- * The contents of this file are subject to the terms of the Common Development and Distribution License (the License).
- * You may not use this file except in compliance with the License.
- *
- * You can obtain a copy of the License at https://forgerock.org/cddlv1-0/. See the License for the specific language governing
- * permission and limitations under the License.
- *
- * Portions Copyrighted 2016 Charan Mann
+ * Portions Copyrighted 2017 Charan Mann
  *
  * openig-uma-ext: Created by Charan Mann on 10/12/16 , 2:21 PM.
  */
@@ -29,7 +21,7 @@
 package org.forgerock.openig.uma;
 
 import org.forgerock.opendj.ldap.*;
-import org.forgerock.opendj.ldap.responses.SearchResultEntry;
+import org.forgerock.opendj.ldap.messages.SearchResultEntry;
 import org.forgerock.opendj.ldif.ConnectionEntryReader;
 import org.forgerock.openig.ldap.LdapClient;
 import org.forgerock.openig.ldap.LdapConnection;
@@ -46,7 +38,7 @@ public class LDAPManager {
     private String hostname;
     private int port;
 
-    public LDAPManager(String hostname, int port, String userName, String password, String baseDN)  {
+    public LDAPManager(String hostname, int port, String userName, String password, String baseDN) {
         this.userName = userName;
         this.password = password;
         this.hostname = hostname;
@@ -121,7 +113,7 @@ public class LDAPManager {
             }
 
             return shares;
-        } catch (SearchResultReferenceIOException | ErrorResultIOException e) {
+        } catch (SearchResultReferenceIOException e) {
             throw LdapException.newLdapException(ResultCode.UNAVAILABLE, e);
         } finally {
             if (null != ldapConnection) {

@@ -1,27 +1,19 @@
 /*
- * Copyright © 2016 ForgeRock, AS.
+ * Copyright © 2017 ForgeRock, AS.
  *
- * This is unsupported code made available by ForgeRock for community development subject to the license detailed below.
- * The code is provided on an "as is" basis, without warranty of any kind, to the fullest extent permitted by law.
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance with the
+ * License.
  *
- * ForgeRock does not warrant or guarantee the individual success developers may have in implementing the code on their
- * development platforms or in production configurations.
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+ * specific language governing permission and limitations under the License.
  *
- * ForgeRock does not warrant, guarantee or make any representations regarding the use, results of use, accuracy, timeliness
- * or completeness of any data or information relating to the alpha release of unsupported code. ForgeRock disclaims all
- * warranties, expressed or implied, and in particular, disclaims all warranties of merchantability, and warranties related
- * to the code, or any service or software related thereto.
+ * When distributing Covered Software, include this CDDL Header Notice in each file and include
+ * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+ * Header, with the fields enclosed by brackets [] replaced by your own identifying
+ * information: "Portions copyright [year] [name of copyright owner]".
  *
- * ForgeRock shall not be liable for any direct, indirect or consequential damages or costs of any type arising out of any
- * action taken by you or others related to the code.
- *
- * The contents of this file are subject to the terms of the Common Development and Distribution License (the License).
- * You may not use this file except in compliance with the License.
- *
- * You can obtain a copy of the License at https://forgerock.org/cddlv1-0/. See the License for the specific language governing
- * permission and limitations under the License.
- *
- * Portions Copyrighted 2016 Charan Mann
+ * Portions Copyrighted 2017 Charan Mann
  *
  * openig-uma-ext: Created by Charan Mann on 10/13/16 , 9:44 AM.
  */
@@ -32,26 +24,26 @@ import org.forgerock.http.Filter;
 import org.forgerock.http.Handler;
 import org.forgerock.http.header.Warning;
 import org.forgerock.http.header.WarningHeader;
+import org.forgerock.http.oauth2.OAuth2;
 import org.forgerock.http.protocol.Form;
 import org.forgerock.http.protocol.Request;
 import org.forgerock.http.protocol.Response;
 import org.forgerock.http.protocol.Status;
 import org.forgerock.json.JsonValue;
-import org.forgerock.openig.heap.GenericHeapObject;
 import org.forgerock.openig.heap.GenericHeaplet;
 import org.forgerock.openig.heap.HeapException;
-import org.forgerock.openig.oauth2.OAuth2;
 import org.forgerock.services.context.Context;
 import org.forgerock.util.AsyncFunction;
 import org.forgerock.util.Function;
 import org.forgerock.util.promise.NeverThrowsException;
 import org.forgerock.util.promise.Promise;
 import org.forgerock.util.promise.ResultHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import static java.lang.String.format;
 import static org.forgerock.http.header.WarningHeader.MISCELLANEOUS_WARNING;
@@ -81,12 +73,14 @@ import static org.forgerock.util.Utils.closeSilently;
  *     }
  * </pre>
  */
-public class UmaResourceServerFilterExt extends GenericHeapObject implements Filter {
+public class UmaResourceServerFilterExt implements Filter {
+
+    private static final Logger logger = LoggerFactory.getLogger(UmaResourceServerFilterExt.class);
 
     private final UmaSharingServiceExt umaService;
     private final Handler protectionApiHandler;
     private final String realm;
-    private final Set<Object> scopes;
+    private final List<Object> scopes;
 
     /**
      * Constructs a new UmaResourceServerFilter.
@@ -97,7 +91,7 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
      */
     public UmaResourceServerFilterExt(final UmaSharingServiceExt umaService,
                                       final Handler protectionApiHandler,
-                                      final String realm, final Set<Object> scopes) {
+                                      final String realm, final List<Object> scopes) {
         this.umaService = umaService;
         this.protectionApiHandler = protectionApiHandler;
         this.realm = realm;
@@ -125,7 +119,7 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
             return ticket(context, share, request);
 
         } catch (UmaException e) {
-            logger.error(e);
+            logger.error("An error occurred while looking for a UMA share", e);
             // No share found
             // Make sure we return a 404
             return newResponsePromise(e.getResponse().setStatus(Status.NOT_FOUND));
@@ -214,7 +208,7 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
                     .as(requiredHeapObject(heap, UmaSharingServiceExt.class));
             Handler handler = config.get("protectionApiHandler").required().as(requiredHeapObject(heap, Handler.class));
             String realm = config.get("realm").as(evaluated()).defaultTo("uma").asString();
-            Set<Object> scopes = config.get("scopes").as(evaluated()).asSet();
+            List<Object> scopes = config.get("scopes").as(evaluated()).asList();
             return new UmaResourceServerFilterExt(service, handler, realm, scopes);
         }
     }
@@ -244,7 +238,6 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
                     value = json(token.getEntity().getJson());
                 } catch (IOException e) {
                     logger.debug("Cannot extract JSON from token introspection response, possibly malformed JSON");
-                    logger.debug(e);
                     return newResponsePromise(newInternalServerError(e));
                 }
                 if (value.get("active").asBoolean()) {
@@ -309,13 +302,12 @@ public class UmaResourceServerFilterExt extends GenericHeapObject implements Fil
                     } catch (IOException e) {
                         // JSON parsing exception
                         // Do not process them here, handle them in the later catch-all block
-                        logger.debug("Cannot extract JSON from ticket response, possibly malformed JSON");
-                        logger.debug(e);
+                        logger.debug("Cannot extract JSON from ticket response, possibly malformed JSON", e);
                     }
                 } else {
-                    logger.debug(format("Got a %s Response from '%s', was expecting a 201 Created.",
-                            response.getStatus(),
-                            umaService.getTicketEndpoint()));
+                    logger.debug("Got a {} Response from '{}', was expecting a 201 Created.",
+                                 response.getStatus(),
+                                 umaService.getTicketEndpoint());
                 }
 
                 // Properly handle 400 errors and UMA error codes

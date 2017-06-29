@@ -1,27 +1,19 @@
 /*
- * Copyright © 2016 ForgeRock, AS.
+ * Copyright © 2017 ForgeRock, AS.
  *
- * This is unsupported code made available by ForgeRock for community development subject to the license detailed below.
- * The code is provided on an "as is" basis, without warranty of any kind, to the fullest extent permitted by law.
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance with the
+ * License.
  *
- * ForgeRock does not warrant or guarantee the individual success developers may have in implementing the code on their
- * development platforms or in production configurations.
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+ * specific language governing permission and limitations under the License.
  *
- * ForgeRock does not warrant, guarantee or make any representations regarding the use, results of use, accuracy, timeliness
- * or completeness of any data or information relating to the alpha release of unsupported code. ForgeRock disclaims all
- * warranties, expressed or implied, and in particular, disclaims all warranties of merchantability, and warranties related
- * to the code, or any service or software related thereto.
+ * When distributing Covered Software, include this CDDL Header Notice in each file and include
+ * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+ * Header, with the fields enclosed by brackets [] replaced by your own identifying
+ * information: "Portions copyright [year] [name of copyright owner]".
  *
- * ForgeRock shall not be liable for any direct, indirect or consequential damages or costs of any type arising out of any
- * action taken by you or others related to the code.
- *
- * The contents of this file are subject to the terms of the Common Development and Distribution License (the License).
- * You may not use this file except in compliance with the License.
- *
- * You can obtain a copy of the License at https://forgerock.org/cddlv1-0/. See the License for the specific language governing
- * permission and limitations under the License.
- *
- * Portions Copyrighted 2016 Charan Mann
+ * Portions Copyrighted 2017 Charan Mann
  *
  * openig-uma-ext: Created by Charan Mann on 10/7/16 , 12:55 PM.
  */
@@ -30,6 +22,7 @@ package org.forgerock.openig.uma;
 
 import org.forgerock.http.Handler;
 import org.forgerock.http.MutableUri;
+import org.forgerock.http.oauth2.OAuth2;
 import org.forgerock.http.protocol.Request;
 import org.forgerock.http.protocol.Response;
 import org.forgerock.http.protocol.Responses;
@@ -41,40 +34,43 @@ import org.forgerock.opendj.ldap.LdapException;
 import org.forgerock.openig.heap.GenericHeaplet;
 import org.forgerock.openig.heap.HeapException;
 import org.forgerock.openig.http.EndpointRegistry;
-import org.forgerock.openig.oauth2.OAuth2;
 import org.forgerock.services.context.Context;
 import org.forgerock.util.Function;
 import org.forgerock.util.promise.NeverThrowsException;
 import org.forgerock.util.promise.Promise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import static java.lang.String.format;
 import static org.forgerock.json.JsonValue.*;
 import static org.forgerock.json.JsonValueFunctions.uri;
-import static org.forgerock.json.resource.Resources.newCollection;
+import static org.forgerock.json.resource.Resources.newHandler;
 import static org.forgerock.json.resource.http.CrestHttp.newHttpHandler;
+import static org.forgerock.openig.util.CrestUtil.newCrestApplication;
 import static org.forgerock.openig.util.JsonValues.evaluated;
 import static org.forgerock.openig.util.JsonValues.requiredHeapObject;
 import static org.forgerock.util.promise.Promises.newExceptionPromise;
 
 /**
  * An {@link UmaSharingService} provides core UMA features to OpenIG when acting as an UMA Resource Server.
- *
+ * <p>
  * <p>It is linked to a single UMA Authorization Server and needs to be pre-registered as an OAuth 2.0 client on that
  * AS.
- *
+ * <p>
  * <p>It is also the place where protected application knowledge is described: each item of the {@code resources}
  * array describe a resource set (that can be composed of multiple endpoints) that share the same set of scopes.
- *
+ * <p>
  * <p>Each resource contains a {@code pattern} used to define which one of them to use when a {@link Share} is
  * {@linkplain #createShare(Context, CreateRequest, String) created}. A resource also contains a list of {@code actions} that
  * defines the set of scopes to require when a requesting party request comes in.
- *
+ * <p>
  * <pre>
  *     {@code {
  *           "name": "UmaServiceExt",
@@ -93,7 +89,7 @@ import static org.forgerock.util.promise.Promises.newExceptionPromise;
  *       }
  *     }
  * </pre>
- *
+ * <p>
  * Along with the {@code UmaService}, a REST endpoint is deployed in OpenIG's API namespace:
  * {@literal /openig/api/system/objects/../objects/[name-of-the-uma-service-object]/share}.
  * The dotted segment depends on your deployment (like which RouterHandler hosts the route that
@@ -171,7 +167,7 @@ public class UmaSharingServiceExt {
         final String uri = createRequest.getContent().get("uri").asString();
         final String name = createRequest.getContent().get("name").asString();
         String type = createRequest.getContent().get("type").asString();
-        Set<Object> scopes = createRequest.getContent().get("scopes").asSet();
+        List<Object> scopes = createRequest.getContent().get("scopes").asList();
 
         final String pat = OAuth2.getBearerAccessToken(((HttpContext) context.getParent()).getHeaderAsString("Authorization"));
 
@@ -242,7 +238,7 @@ public class UmaSharingServiceExt {
         return protectionApiHandler.handle(context, request);
     }
 
-    private JsonValue resourceSet(final String name, final Set<Object> scopes, final String type) {
+    private JsonValue resourceSet(final String name, final List<Object> scopes, final String type) {
         return json(object(field("name", name),
                 field("scopes", scopes), field("type", type)));
     }
@@ -387,6 +383,8 @@ public class UmaSharingServiceExt {
      */
     public static class Heaplet extends GenericHeaplet {
 
+        private static final Logger logger = LoggerFactory.getLogger(UmaSharingServiceExt.Heaplet.class);
+
         private static String startsWithSlash(final String realm) {
             String nonNullRealm = realm != null ? realm : "/";
             return nonNullRealm.startsWith("/") ? nonNullRealm : "/" + nonNullRealm;
@@ -415,9 +413,11 @@ public class UmaSharingServiceExt {
                         clientSecret,
                         ldapManager);
                 // register admin endpoint
-                Handler httpHandler = newHttpHandler(newCollection(new ShareCollectionProviderExt(service)));
+                Handler httpHandler = newHttpHandler(
+                        newCrestApplication(newHandler(new ShareCollectionProviderExt(service)),
+                                "frapi:openig:uma:share"));
                 EndpointRegistry.Registration share = endpointRegistry().register("share", httpHandler);
-                logger.info(format("UMA Share endpoint available at '%s'", share.getPath()));
+                logger.info("UMA Share endpoint available at '{}'", share.getPath());
 
                 return service;
             } catch (URISyntaxException e) {

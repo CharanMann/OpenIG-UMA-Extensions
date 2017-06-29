@@ -24,6 +24,12 @@
     <artifactId>openig-uma-ext</artifactId>
     <name>OpenIG UMA Extensions</name>
 
+    <properties>
+        <openig.version>5.0.1-SNAPSHOT</openig.version>
+        <opendj.sdk.version>4.0.0</opendj.sdk.version>
+        <commons.version>21.0.0</commons.version>
+    </properties>
+
     <repositories>
         <repository>
             <id>forgerock-staging-repository</id>
@@ -41,22 +47,32 @@
         <dependency>
             <groupId>org.forgerock.openig</groupId>
             <artifactId>openig-core</artifactId>
-            <version>4.5.0</version>
+            <version>${openig.version}</version>
         </dependency>
         <dependency>
             <groupId>org.forgerock.openig</groupId>
             <artifactId>openig-uma</artifactId>
-            <version>4.5.0</version>
+            <version>${openig.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.forgerock.opendj</groupId>
-            <artifactId>opendj-ldap-sdk</artifactId>
-            <version>2.6.11</version>
-        </dependency>
+
+        <!-- OpenDJ API -->
         <dependency>
             <groupId>org.forgerock.opendj</groupId>
             <artifactId>opendj-core</artifactId>
-            <version>3.5.1</version>
+            <version>${opendj.sdk.version}</version>
+        </dependency>
+        <!-- OpenDJ Grizzly -->
+        <dependency>
+            <groupId>org.forgerock.opendj</groupId>
+            <artifactId>opendj-grizzly</artifactId>
+            <version>${opendj.sdk.version}</version>
+        </dependency>
+
+        <!-- Commons -->
+        <dependency>
+            <groupId>org.forgerock.commons</groupId>
+            <artifactId>json-resource-http</artifactId>
+            <version>${commons.version}</version>
         </dependency>
     </dependencies>
 

@@ -1,40 +1,36 @@
 /*
- * Copyright © 2016 ForgeRock, AS.
+ * Copyright © 2017 ForgeRock, AS.
  *
- * This is unsupported code made available by ForgeRock for community development subject to the license detailed below.
- * The code is provided on an "as is" basis, without warranty of any kind, to the fullest extent permitted by law.
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance with the
+ * License.
  *
- * ForgeRock does not warrant or guarantee the individual success developers may have in implementing the code on their
- * development platforms or in production configurations.
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+ * specific language governing permission and limitations under the License.
  *
- * ForgeRock does not warrant, guarantee or make any representations regarding the use, results of use, accuracy, timeliness
- * or completeness of any data or information relating to the alpha release of unsupported code. ForgeRock disclaims all
- * warranties, expressed or implied, and in particular, disclaims all warranties of merchantability, and warranties related
- * to the code, or any service or software related thereto.
+ * When distributing Covered Software, include this CDDL Header Notice in each file and include
+ * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+ * Header, with the fields enclosed by brackets [] replaced by your own identifying
+ * information: "Portions copyright [year] [name of copyright owner]".
  *
- * ForgeRock shall not be liable for any direct, indirect or consequential damages or costs of any type arising out of any
- * action taken by you or others related to the code.
- *
- * The contents of this file are subject to the terms of the Common Development and Distribution License (the License).
- * You may not use this file except in compliance with the License.
- *
- * You can obtain a copy of the License at https://forgerock.org/cddlv1-0/. See the License for the specific language governing
- * permission and limitations under the License.
- *
- * Portions Copyrighted 2016 Charan Mann
+ * Portions Copyrighted 2017 Charan Mann
  *
  * openig-uma-ext: Created by Charan Mann on 10/12/16 , 10:51 AM.
  */
 
 package org.forgerock.openig.uma;
 
+import org.forgerock.api.annotations.*;
+import org.forgerock.api.enums.CreateMode;
+import org.forgerock.api.enums.QueryType;
+import org.forgerock.api.enums.Stability;
+import org.forgerock.http.oauth2.OAuth2;
 import org.forgerock.http.protocol.Form;
 import org.forgerock.http.protocol.Request;
 import org.forgerock.http.protocol.Status;
 import org.forgerock.json.JsonValue;
 import org.forgerock.json.resource.*;
 import org.forgerock.json.resource.http.HttpContext;
-import org.forgerock.openig.oauth2.OAuth2;
 import org.forgerock.services.context.Context;
 import org.forgerock.util.Function;
 import org.forgerock.util.promise.NeverThrowsException;
@@ -50,7 +46,19 @@ import static org.forgerock.json.resource.Responses.newResourceResponse;
 import static org.forgerock.util.promise.Promises.newResultPromise;
 import static org.forgerock.util.query.QueryFilter.alwaysTrue;
 
-public class ShareCollectionProviderExt implements CollectionResourceProvider {
+/**
+ * A {@link ShareCollectionProvider} is the CREST-based endpoint responsible for managing (creating, deleting, ...)
+ * {@link Share} objects.
+ * <p>
+ * <p>Supported operations: {@literal CREATE}, {@literal READ}, {@literal DELETE}
+ * and {@literal QUERY} (simple shares list, no filtering).
+ */
+@CollectionProvider(details = @Handler(id = "share",
+        resourceSchema = @Schema(schemaResource = "share.json", id = "share"),
+        title = "i18n:#service.title",
+        description = "i18n:#service.desc",
+        mvccSupported = false))
+class ShareCollectionProviderExt implements CollectionResourceProvider {
 
     private final UmaSharingServiceExt service;
 
@@ -75,6 +83,17 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
     }
 
     @Override
+    @Create(operationDescription = @Operation(description = "i18n:#create.desc",
+            stability = Stability.EVOLVING,
+            errors = {
+                    @ApiError(id = "NotSupported",
+                            code = 401,
+                            description = "i18n:#not-supported.desc"),
+                    @ApiError(id = "BadRequest",
+                            code = 400,
+                            description = "i18n:#bad-request.desc")
+            }),
+            modes = CreateMode.ID_FROM_SERVER)
     public Promise<ResourceResponse, ResourceException> createInstance(final Context context,
                                                                        final CreateRequest request) {
         if (request.getNewResourceId() != null) {
@@ -101,6 +120,11 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
     }
 
     @Override
+    @Delete(operationDescription = @Operation(description = "i18n:#delete.desc",
+            stability = Stability.EVOLVING,
+            errors = {@ApiError(id = "NotFound",
+                    code = 404,
+                    description = "i18n:#not-found.desc")}))
     public Promise<ResourceResponse, ResourceException> deleteInstance(final Context context,
                                                                        final String resourceId,
                                                                        final DeleteRequest request) {
@@ -124,6 +148,12 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
     }
 
     @Override
+    @Query(operationDescription = @Operation(description = "i18n:#query.desc",
+            stability = Stability.EVOLVING,
+            errors = {@ApiError(id = "NotSupported",
+                    code = 401,
+                    description = "i18n:#not-supported.desc")}),
+            type = QueryType.FILTER)
     public Promise<QueryResponse, ResourceException> queryCollection(final Context context,
                                                                      final QueryRequest request,
                                                                      final QueryResourceHandler handler) {
@@ -148,6 +178,8 @@ public class ShareCollectionProviderExt implements CollectionResourceProvider {
     }
 
     @Override
+    @Read(operationDescription = @Operation(description = "i18n:#read.desc",
+            stability = Stability.EVOLVING))
     public Promise<ResourceResponse, ResourceException> readInstance(final Context context,
                                                                      final String resourceId,
                                                                      final ReadRequest request) {

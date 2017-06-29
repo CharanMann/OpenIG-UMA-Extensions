@@ -1,0 +1,17 @@
+{
+  "heap": [
+    {
+      "name": "ClientHandler",
+      "type": "ClientHandler"
+    },
+    {
+      "name": "ApiProtectionFilter",
+      "type": "ScriptableFilter",
+      "config": {
+        "type": "application/x-groovy",
+        "file": "CorsFilter.groovy"
+      }
+    }
+  ],
+  "prefix": "openig"
+}

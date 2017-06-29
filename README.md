@@ -25,9 +25,9 @@ OpenDJ UMA RS store Installation & Configuration:
    ============= <br />
    * Root User DN:                  cn=Directory Manager
    * Password                       cangetindj
-   * Hostname:                      opendj.example.com
+   * Hostname:                      opendjrs.example.com
    * LDAP Listener Port:            3389
-   * Administration Connector Port: 4444
+   * Administration Connector Port: 7444
    * SSL/TLS:                       disabled
    * Directory Data:                Backend Type: JE Backend, 
                                     Create New Base DN dc=openig,dc=forgerock,dc=org

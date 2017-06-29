@@ -1,0 +1,33 @@
+{
+  "handler": {
+    "type": "Router",
+    "audit": "global",
+    "capture": "all"
+  },
+  "heap": [
+    {
+      "name": "capture",
+      "type": "CaptureDecorator",
+      "config": {
+        "captureEntity": true,
+        "_captureContext": true
+      }
+    },
+    {
+      "name": "UmaServiceExt",
+      "type": "UmaServiceExt",
+      "config": {
+        "protectionApiHandler": "ClientHandler",
+        "authorizationServerUri": "http://openam5.example.com:8080/openam",
+        "realm": "/employees",
+        "clientId": "OpenIG_RS",
+        "clientSecret": "password",
+        "ldapHost": "opendjrs.example.com",
+        "ldapPort": 3389,
+        "ldapAdminId": "cn=Directory Manager",
+        "ldapAdminPassword": "cangetindj",
+        "ldapBaseDN": "dc=openig,dc=forgerock,dc=org"
+      }
+    }
+  ]
+}

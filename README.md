@@ -1,6 +1,6 @@
 # OpenIG-UMA-Extensions
 
-Current OpenIG-UMA has some limitations: https://backstage.forgerock.com/#!/docs/openig/4.5/gateway-guide#uma-limitations ; this extension cover some of these limitations. <br />
+Current OpenIG-UMA has some limitations: https://backstage.forgerock.com/docs/ig/5/gateway-guide#uma-limitations ; this extension cover some of these limitations. <br />
 
 OpenIG UMA Service and Filter Extensions for: <br />
 1. Realm support <br />
@@ -82,10 +82,9 @@ OpenIG Configuration:
       
 OpenIG Use Cases testing:
 =========================
-* Share resource
-Refer to [OpenIG-UMA REST endpoints](#OpenIG-UMA REST endpoints:) for details on creating UMA share. <br />
+* Share resource: Refer section: [OpenIG-UMA REST endpoints] for details on creating UMA share. <br />
 
-* Access /history/emp1 with scope:view and RPT. Note that userid and scope are optional headers. 'userid' is required only if share URL is not unique among users, in this situation IG will need additional context to find the particular resource. 'scope' is required for IG to locate specific route. 
+* Access /history/emp1 with scope:view and RPT. Note that userid and scope are optional headers. 'userid' is required only if share URL is not unique among users, in this situation IG will need additional context to find the particular resource. 'scope' is required for IG to locate correct route and is specific to this sample only. 
 ```
 curl -X GET \
   http://<OpenIG-Host:Port>/history/emp1 \

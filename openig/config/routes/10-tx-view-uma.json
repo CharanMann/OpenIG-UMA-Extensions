@@ -16,7 +16,7 @@
             "protectionApiHandler": "ClientHandler",
             "umaService": "UmaServiceExt",
             "scopes" : [
-              "http://apis.example.net/scopes/write"
+              "http://apis.example.net/scopes/view"
             ]
           }
         }
@@ -24,6 +24,6 @@
       "handler": "ClientHandler"
     }
   },
-  "baseURI": "http://apis.example.net:8010",
-  "condition": "${matches(request.uri.path, '^/history') and (request.headers['scope'][0] == 'write')}"
+  "baseURI": "http://apis.example.com:8010",
+  "condition": "${matches(request.uri.path, '^/history') and (request.headers['scope'][0] == 'view')}"
 }

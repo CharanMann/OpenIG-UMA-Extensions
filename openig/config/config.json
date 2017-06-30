@@ -1,5 +1,6 @@
 {
   "handler": {
+    "name": "_router",
     "type": "Router",
     "audit": "global",
     "capture": "all"
@@ -18,7 +19,7 @@
       "type": "UmaServiceExt",
       "config": {
         "protectionApiHandler": "ClientHandler",
-        "authorizationServerUri": "http://openam5.example.com:8080/openam",
+        "authorizationServerUri": "http://openam51.example.com:8282/openam",
         "realm": "/employees",
         "clientId": "OpenIG_RS",
         "clientSecret": "password",

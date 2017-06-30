@@ -15,7 +15,7 @@
  *
  * Portions Copyrighted 2017 Charan Mann
  *
- * openig-uma-ext: Created by Charan Mann on 10/13/16 , 9:44 AM.
+ * openig-uma-ext: Created by Charan Mann on 6/29/17 , 10:56 PM.
  */
 
 package org.forgerock.openig.uma;
@@ -306,8 +306,8 @@ public class UmaResourceServerFilterExt implements Filter {
                     }
                 } else {
                     logger.debug("Got a {} Response from '{}', was expecting a 201 Created.",
-                                 response.getStatus(),
-                                 umaService.getTicketEndpoint());
+                            response.getStatus(),
+                            umaService.getTicketEndpoint());
                 }
 
                 // Properly handle 400 errors and UMA error codes

@@ -15,7 +15,7 @@
  *
  * Portions Copyrighted 2017 Charan Mann
  *
- * openig-uma-ext: Created by Charan Mann on 10/7/16 , 12:55 PM.
+ * openig-uma-ext: Created by Charan Mann on 6/29/17 , 10:56 PM.
  */
 
 package org.forgerock.openig.uma;
@@ -113,20 +113,20 @@ public class UmaSharingServiceExt {
      * sets described by the given {@code templates}.
      *
      * @param protectionApiHandler used to call the resource set endpoint
-     * @param authorizationServer  Bound UMA Authorization Server
+     * @param authorizationServerURI  Bound UMA Authorization Server
      * @param clientId             OAuth 2.0 Client identifier
      * @param clientSecret         OAuth 2.0 Client secret
      * @throws URISyntaxException when the authorization server URI cannot be "normalized" (trailing '/' append if required)
      */
     public UmaSharingServiceExt(final Handler protectionApiHandler,
                                 String realm,
-                                final URI authorizationServer,
+                                final URI authorizationServerURI,
                                 final String clientId,
                                 final String clientSecret,
                                 final LDAPManager ldapManager)
             throws URISyntaxException {
         this.protectionApiHandler = protectionApiHandler;
-        this.authorizationServer = appendTrailingSlash(authorizationServer);
+        this.authorizationServer = appendTrailingSlash(authorizationServerURI);
 
         this.realm = realm;
         this.introspectionEndpoint = authorizationServer.resolve("oauth2" + realm + "/introspect");

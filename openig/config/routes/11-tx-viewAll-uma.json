@@ -4,14 +4,6 @@
     "config": {
       "filters": [
         {
-          "type": "ScriptableFilter",
-          "config": {
-            "type": "application/x-groovy",
-            "file": "CorsFilter.groovy"
-          },
-          "capture": "all"
-        },
-        {
           "type": "UmaFilterExt",
           "config": {
             "protectionApiHandler": "ClientHandler",

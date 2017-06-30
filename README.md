@@ -8,7 +8,7 @@ OpenIG UMA Service and Filter Extensions for: <br />
 3. User friendly UMA Resource name <br />
 4. Persisting UMA ResourceSet id and PAT in OpenDJ <br />
 
-This features are not currently supported in this extension: <br />
+These features are not currently supported in this extension: <br />
 1. Automatic refresh of PAT, handling expired PAT. We can use long-lived access tokens for testing purpose  <br />
 2. Resource share patterns <br />
 3. Remove share from AM using IG REST <br />
@@ -83,10 +83,68 @@ OpenIG Configuration:
 OpenIG Use Cases testing:
 =========================
 * Share resource
+Refer to [OpenIG-UMA REST endpoints](#OpenIG-UMA REST endpoints:) for details on creating UMA share. <br />
 
-* Access /history/emp1 with scope:view and RPT 
+* Access /history/emp1 with scope:view and RPT. Note that userid and scope are optional headers. 'userid' is required only if share URL is not unique among users, in this situation IG will need additional context to find the particular resource. 'scope' is required for IG to locate specific route. 
+```
+curl -X GET \
+  http://<OpenIG-Host:Port>/history/emp1 \
+  -H 'authorization: Bearer <RPT>' \
+  -H 'scope: view' \
+  -H 'userid: tom'
+ 
+{
+    "id": "emp1",
+    "history": [
+        {
+            "date": "04-28-2016, 16:30:02 GMT-0400 (EDT)",
+            "activity": "Logged In",
+            "location": "New York, US",
+            "ipAddress": "192.168.56.1"
+        },
+        {
+            "date": "04-28-2016, 16:40:02 GMT-0400 (EDT)",
+            "activity": "Enrolled in health insurance",
+            "location": "New York, US",
+            "ipAddress": "192.168.56.1"
+        },
+        {
+            "date": "04-30-2016, 18:30:02 GMT-0400 (EDT)",
+            "activity": "Enrolled in 401k",
+            "location": "Atlanta, US",
+            "ipAddress": "192.168.100.1"
+        }
+    ]
+}
+```
 
 * Access /history/all with scope:viewAll and RPT 
+```
+curl -X GET \
+  http://<OpenIG-Host:Port>/history/emp1 \
+  -H 'authorization: Bearer <RPT>' \
+  -H 'scope: viewAll'
+ 
+[
+    {
+        "id": "emp1",
+        "history": [
+            {
+                "date": "04-28-2016, 16:30:02 GMT-0400 (EDT)",
+                "activity": "Logged In",
+                "location": "New York, US",
+                "ipAddress": "192.168.56.1"
+            },
+            ...
+        ]
+    },
+    {
+            "id": "emp1",
+            ...
+    }
+    ...
+]
+```
 
 OpenIG-UMA REST endpoints:
 ==========================
@@ -151,7 +209,7 @@ curl -X GET \
 ```
 curl -X GET \
   http://<OpenIG-Host:Port>/openig/api/system/objects/umaserviceext/share/<OpenIG-ResourceId> \
-  -H 'authorization: Bearer <Valid PAT>' \
+  -H 'authorization: Bearer <PAT>' \
   -H 'content-type: application/json' 
 
 {
@@ -169,7 +227,7 @@ curl -X GET \
 ```
 curl -X DELETE \
   http://<OpenIG-Host:Port>/openig/api/system/objects/umaserviceext/share/<OpenIG-ResourceId> \
-  -H 'authorization: Bearer <Valid PAT>' \
+  -H 'authorization: Bearer <PAT>' \
   -H 'content-type: application/json' 
 
 {

@@ -23,10 +23,7 @@ package org.forgerock.openig.uma;
 import org.forgerock.http.Handler;
 import org.forgerock.http.MutableUri;
 import org.forgerock.http.oauth2.OAuth2;
-import org.forgerock.http.protocol.Request;
-import org.forgerock.http.protocol.Response;
-import org.forgerock.http.protocol.Responses;
-import org.forgerock.http.protocol.Status;
+import org.forgerock.http.protocol.*;
 import org.forgerock.json.JsonValue;
 import org.forgerock.json.resource.CreateRequest;
 import org.forgerock.json.resource.http.HttpContext;
@@ -254,20 +251,28 @@ public class UmaSharingServiceExt {
     public ShareExt findShare(Request request) throws UmaException {
 
         // Need to find which Share to use
-        String requestPath = request.getUri().getPath();
-        String userId = request.getForm().getFirst("userId");
+        String requestURI = request.getUri().getPath();
 
-        ShareExt matchShareExt = new ShareExt(null, requestPath, userId, realm, clientId);
+        // Check if userId header is present
+        Header userIdHeader = request.getHeaders().get("userId");
+        String userId = null;
+        if (null != userIdHeader) {
+            userId = userIdHeader.getFirstValue();
+        }
+
+        ShareExt matchShareExt = new ShareExt(null, requestURI, userId, realm, clientId);
 
         try {
             Set<ShareExt> shares = ldapManager.getShare(matchShareExt);
-            if (shares.size() != 0) {
+            if (shares.size() == 1) {
                 return shares.iterator().next();
+            } else if (shares.size() > 1) {
+                throw new UmaException(format("More than 1 shared resource found for %s, Need more context such as 'userId' to locate resource", requestURI));
             }
         } catch (LdapException e) {
-            throw new UmaException(format("Can't find any shared resource for %s", requestPath));
+            throw new UmaException(format("Can't find any shared resource for %s", requestURI));
         }
-        throw new UmaException(format("Can't find any shared resource for %s", requestPath));
+        throw new UmaException(format("Can't find any shared resource for %s", requestURI));
     }
 
     /**

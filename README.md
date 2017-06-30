@@ -7,20 +7,25 @@ OpenIG UMA Service and Filter Extensions for: <br />
 2. Extend OpenIG-UMA REST endpoint: Authentication using PAT <br /> 
 3. User friendly UMA Resource name <br />
 4. Persisting UMA ResourceSet id and PAT in OpenDJ <br />
-5. //TODO Automatic refresh of PAT, handling expired PAT  <br />
+
+This features are not currently supported in this extension: <br />
+1. Automatic refresh of PAT, handling expired PAT. We can use long-lived access tokens for testing purpose  <br />
+2. Resource share patterns <br />
+3. Remove share from AM using IG REST <br />
 
 
 Pre-requisites :
 ================
+* Versions used for this project: IG 5.0, AM 5.1, DS 4.0
 1. OpenAM has been installed and configured. Sample routes in this example use OpenAM realm '/employees'. 
-2. OpenAM UMA service has been configured as specified here: https://backstage.forgerock.com/#!/docs/openam/13.5/admin-guide#configure-uma
-3. OpenIG has been installed and configured as UMA RS as specified here: https://backstage.forgerock.com/#!/docs/openig/4.5/gateway-guide#chap-uma 
+2. OpenAM UMA service has been configured as specified here: https://backstage.forgerock.com/docs/am/5.1/uma-guide
+3. OpenIG has been installed and configured as UMA RS as specified here: https://backstage.forgerock.com/docs/ig/5/gateway-guide#chap-uma  
 4. Maven has been installed and configured.
 
 
 OpenDJ UMA RS store Installation & Configuration:
 =================================================
-1. Install OpenDJ under /opt/opendjis. Refer https://backstage.forgerock.com/#!/docs/opendj/3.5/install-guide#command-line-install <br />
+1. Install OpenDJ under /opt/opendjrs. Refer https://backstage.forgerock.com/docs/ds/5/install-guide#chap-setup-ds <br />
    Setup params: <br />
    ============= <br />
    * Root User DN:                  cn=Directory Manager
@@ -41,8 +46,8 @@ OpenIG Configuration:
 1. Build OpenIG-UMA extension by running 'mvn clean install'. This will build openig-uma-ext-1.0.jar under /target directory.
 2. Stop OpenIG. 
 3. Copy openig-uma-ext-1.0.jar to <OpenIG-TomcatHome>/webapps/ROOT/WEB-INF/lib
-4. Copy openig/config/routes/01-uma.json to OpenIG routes directory, Some details on this route: <br />
-   * UmaServiceExt config, we can configure LDAP details here:
+4. Copy openig/config/* to <OPENIG_BASE> directory, Some details on this routes: <br />
+   * UmaServiceExt in config.json, we can configure LDAP details here:
    ```
        {
          "name": "UmaServiceExt",
@@ -74,115 +79,126 @@ OpenIG Configuration:
           }
         }
    ```
-   * When client (bob) access this share; client needs to specify {"userId": "alice"} as request data. This helps OpenIG UMA RS to locate the particular resource. 
-   ```
-        url: resource_url,
-        type: "GET",
-        data: {"userId": "alice"}
-   ```
       
 OpenIG Use Cases testing:
 =========================
-1. /uma folder updates are required in openig-doc-4.5.0-jar-with-dependencies.jar. Unpack this jar and replace /uma folder contents with /openig-doc-ext/uma files. If required; update common.js configs like OpenAM url etc. 
-2. Execute this for testing OpenIG-UMA usecases: https://backstage.forgerock.com/#!/docs/openig/4.5/gateway-guide#uma-trying-it-out
+* Share resource
+
+* Access /history/emp1 with scope:view and RPT 
+
+* Access /history/all with scope:viewAll and RPT 
 
 OpenIG-UMA REST endpoints:
 ==========================
 All below REST endpoints require valid PAT in Authorization header. 
  
-* Create share. UMA shares need to have unique uri and name. Note that this restriction is per uid per realm per OAuth Client. In other words if user with uid 'alice' (in realm /employees and and using OAuth Client: OpenIG_RS) has created UMA share with name: app1 and uri: /app1, then she can't create share with name: app1 and uri /app2 (or name: app2 and uri /app1) but alice in /customer realm can create such share.
+* Create share. UMA shares need to have unique uri and name. Note that this restriction is per uid per realm per OAuth Client. In other words if user with uid 'alice' (in realm /employees and and using OAuth Client: OpenIG_RS) has created UMA share with name: TxHistory and uri: /history/emp1, then she can't create share with name: TxHistory and uri /history/emp2 (or name: TxHistory2 and uri /history/emp1) but alice in /customer realm can create such share.
 ```
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" -d '{
-	 "uri" : "/photoAlbum",
-     "name" : "PhotoAlbum",
+curl -X POST \
+  http://<OpenIG-Host:Port>/openig/api/system/objects/umaserviceext/share \
+  -H 'authorization: Bearer <PAT>' \
+  -H 'content-type: application/json' \
+  -H 'scope: view' \
+  -d '{
+	 "uri" : "/history/emp1",
+     "name" : "TxHistory",
      "scopes" : [
-         "http://photoz.sample.com/scopes/view",
-         "http://photoz.sample.com/scopes/all"
+         "http://apis.example.net/scopes/view",
+         "http://apis.example.net/scopes/viewAll"
      ],
-     "type" : "http://photoz.sample.com"
- }' "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share?_action=create"
+     "type" : "http://apis.example.net/history"
+ }'
  
 {
-  "_id": "b3400172-90a5-4c7f-8c0f-c5b35ea7e11c",
-  "resourceURI": "/photoAlbum",
-  "user_access_policy_uri": "http://openam135.sample.com:8080/openam/XUI/?realm=/employees#uma/share/1c62792d-4a88-455b-bf7d-9c6ac1433bc55",
-  "pat": "8751ca72-3925-4528-b14c-5750f12ab0ac",
-  "resource_set_id": "1c62792d-4a88-455b-bf7d-9c6ac1433bc55",
-  "userId": "alice",
-  "realm": "/employees",
-  "client_id": "OpenIG_RS"
-} 
+    "_id": "3c07265f-50fb-4630-b503-b35f663dbd82",
+    "resourceURI": "/history/emp1",
+    "user_access_policy_uri": "http://openam51.example.com:8282/openam/XUI/?realm=/employees#uma/share/746bc572-61db-4e91-a033-d2b69d0aff070",
+    "pat": "fd9898cd-cac9-4d8e-90e9-b4f79fedf9bc",
+    "resource_set_id": "746bc572-61db-4e91-a033-d2b69d0aff070",
+    "userId": "alice",
+    "realm": "/employees",
+    "client_id": "OpenIG_RS"
+}
 ```
 * Read all shares:
 ```
-curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share?_queryFilter=true"
- 
+curl -X GET \
+  'http://<OpenIG-Host:Port>/openig/api/system/objects/umaserviceext/share?_queryFilter=true' \
+  -H 'authorization: Bearer <PAT>' \
+  -H 'content-type: application/json' 
+  
 {
-  "result": [
-    {
-      "_id": "4b179c9f-823a-4e62-bc7a-fe51929d41a7",
-      "resourceURI": "/login",
-      "user_access_policy_uri": "http://openam135.sample.com:8080/openam/XUI/?realm=/employees#uma/share/cae0104a-668a-4f07-948e-0a843f8c89823",
-      "pat": "38909fe9-c18e-45c1-9b46-509313e99144",
-      "resource_set_id": "cae0104a-668a-4f07-948e-0a843f8c89823",
-      "userId": "alice",
-      "realm": "/employees",
-      "client_id": "OpenIG_RS"
-    }
-  ],
-  "resultCount": 1,
-  "pagedResultsCookie": null,
-  "totalPagedResultsPolicy": "NONE",
-  "totalPagedResults": -1,
-  "remainingPagedResults": -1
+    "result": [
+        {
+            "_id": "3c07265f-50fb-4630-b503-b35f663dbd82",
+            "resourceURI": "/history/emp1",
+            "user_access_policy_uri": "http://openam51.example.com:8282/openam/XUI/?realm=/employees#uma/share/746bc572-61db-4e91-a033-d2b69d0aff070",
+            "pat": "fd9898cd-cac9-4d8e-90e9-b4f79fedf9bc",
+            "resource_set_id": "746bc572-61db-4e91-a033-d2b69d0aff070",
+            "userId": "alice",
+            "realm": "/employees",
+            "client_id": "OpenIG_RS"
+        }
+    ],
+    "resultCount": 1,
+    "pagedResultsCookie": null,
+    "totalPagedResultsPolicy": "NONE",
+    "totalPagedResults": -1,
+    "remainingPagedResults": -1
 }
 ```
 * Read specific share. Note that this requires <OpenIG-ResourceId> in REST URL. 
 ```
-curl -X GET -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share/<OpenIG-ResourceId>"
+curl -X GET \
+  http://<OpenIG-Host:Port>/openig/api/system/objects/umaserviceext/share/<OpenIG-ResourceId> \
+  -H 'authorization: Bearer <Valid PAT>' \
+  -H 'content-type: application/json' 
 
 {
-  "_id": "4b179c9f-823a-4e62-bc7a-fe51929d41a7",
-  "resourceURI": "/login",
-  "user_access_policy_uri": "http://openam135.sample.com:8080/openam/XUI/?realm=/employees#uma/share/cae0104a-668a-4f07-948e-0a843f8c89823",
-  "pat": "38909fe9-c18e-45c1-9b46-509313e99144",
-  "resource_set_id": "cae0104a-668a-4f07-948e-0a843f8c89823",
-  "userId": "alice",
-  "realm": "/employees",
-  "client_id": "OpenIG_RS"
+    "_id": "3c07265f-50fb-4630-b503-b35f663dbd82",
+    "resourceURI": "/history/emp1",
+    "user_access_policy_uri": "http://openam51.example.com:8282/openam/XUI/?realm=/employees#uma/share/746bc572-61db-4e91-a033-d2b69d0aff070",
+    "pat": "fd9898cd-cac9-4d8e-90e9-b4f79fedf9bc",
+    "resource_set_id": "746bc572-61db-4e91-a033-d2b69d0aff070",
+    "userId": "alice",
+    "realm": "/employees",
+    "client_id": "OpenIG_RS"
 }
 ```
-* Delete specific share. Note that this requires <OpenIG-ResourceId> in REST URL.
+* Delete specific share. Note that this requires <OpenIG-ResourceId> in REST URL. Note that this doesn't remove resource from OpenAM
 ```
-curl -X DELETE -H "Content-Type: application/json" -H "Authorization: Bearer <Valid PAT>" -d '' "http://<OpenIG-Host:Port>/openig/api/system/objects/router-handler/routes/01-uma/objects/umaserviceext/share/<OpenIG-ResourceId>"
+curl -X DELETE \
+  http://<OpenIG-Host:Port>/openig/api/system/objects/umaserviceext/share/<OpenIG-ResourceId> \
+  -H 'authorization: Bearer <Valid PAT>' \
+  -H 'content-type: application/json' 
 
 {
-  "_id": "4b179c9f-823a-4e62-bc7a-fe51929d41a7",
-  "resourceURI": "/login",
-  "user_access_policy_uri": "http://openam135.sample.com:8080/openam/XUI/?realm=/employees#uma/share/cae0104a-668a-4f07-948e-0a843f8c89823",
-  "pat": "38909fe9-c18e-45c1-9b46-509313e99144",
-  "resource_set_id": "cae0104a-668a-4f07-948e-0a843f8c89823",
-  "userId": "alice",
-  "realm": "/employees",
-  "client_id": "OpenIG_RS"
+    "_id": "3c07265f-50fb-4630-b503-b35f663dbd82",
+    "resourceURI": "/history/emp1",
+    "user_access_policy_uri": "http://openam51.example.com:8282/openam/XUI/?realm=/employees#uma/share/746bc572-61db-4e91-a033-d2b69d0aff070",
+    "pat": "fd9898cd-cac9-4d8e-90e9-b4f79fedf9bc",
+    "resource_set_id": "746bc572-61db-4e91-a033-d2b69d0aff070",
+    "userId": "alice",
+    "realm": "/employees",
+    "client_id": "OpenIG_RS"
 }
 ```
 
 
 * * *
 
-Copyright © 2016 ForgeRock, AS.
+Copyright © 2017 ForgeRock, AS.
 
-This is unsupported code made available by ForgeRock for community development subject to the license detailed below. The code is provided on an "as is" basis, without warranty of any kind, to the fullest extent permitted by law. 
+The contents of this file are subject to the terms of the Common Development and
+Distribution License (the License). You may not use this file except in compliance with the
+License.
 
-ForgeRock does not warrant or guarantee the individual success developers may have in implementing the code on their development platforms or in production configurations.
+You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+specific language governing permission and limitations under the License.
 
-ForgeRock does not warrant, guarantee or make any representations regarding the use, results of use, accuracy, timeliness or completeness of any data or information relating to the alpha release of unsupported code. ForgeRock disclaims all warranties, expressed or implied, and in particular, disclaims all warranties of merchantability, and warranties related to the code, or any service or software related thereto.
+When distributing Covered Software, include this CDDL Header Notice in each file and include
+the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+Header, with the fields enclosed by brackets [] replaced by your own identifying
+information: "Portions copyright [year] [name of copyright owner]".
 
-ForgeRock shall not be liable for any direct, indirect or consequential damages or costs of any type arising out of any action taken by you or others related to the code.
-
-The contents of this file are subject to the terms of the Common Development and Distribution License (the License). You may not use this file except in compliance with the License.
-
-You can obtain a copy of the License at https://forgerock.org/cddlv1-0/. See the License for the specific language governing permission and limitations under the License.
-
-Portions Copyrighted 2016 Charan Mann
+Portions Copyrighted 2017 Charan Mann

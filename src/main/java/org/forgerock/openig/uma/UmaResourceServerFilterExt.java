@@ -315,7 +315,7 @@ public class UmaResourceServerFilterExt implements Filter {
                 Response forbidden = new Response(Status.FORBIDDEN);
                 forbidden.getHeaders().put(new WarningHeader(new Warning(MISCELLANEOUS_WARNING,
                         "-",
-                        "UMA Authorization Server Unreachable")));
+                        "UMA Authorization Error: "+ response.getEntity())));
                 return forbidden;
             } finally {
                 // Close previous response object

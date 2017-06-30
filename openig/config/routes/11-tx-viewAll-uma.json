@@ -1,0 +1,45 @@
+{
+  "handler": {
+    "type": "Chain",
+    "config": {
+      "filters": [
+        {
+          "type": "ScriptableFilter",
+          "config": {
+            "type": "application/x-groovy",
+            "file": "CorsFilter.groovy"
+          },
+          "capture": "all"
+        },
+        {
+          "type": "UmaFilterExt",
+          "config": {
+            "protectionApiHandler": "ClientHandler",
+            "umaService": "UmaServiceExt",
+            "scopes": [
+              "http://apis.example.net/scopes/viewAll"
+            ]
+          },
+          "capture": "all"
+        }
+      ],
+      "handler": {
+        "type": "StaticResponseHandler",
+        "config": {
+          "status": 302,
+          "reason": "Found",
+          "headers": {
+            "Location": [
+              "http://apis.example.com:8010/history/all"
+            ]
+          }
+        },
+        "capture": "all"
+      },
+      "capture": "all"
+    },
+    "capture": "all"
+  },
+  "baseURI": "http://apis.example.com:8010/history",
+  "condition": "${matches(request.uri.path, '^/history') and (request.headers['scope'][0] == 'viewAll')}"
+}

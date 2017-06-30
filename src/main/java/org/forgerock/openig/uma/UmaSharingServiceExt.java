@@ -77,7 +77,7 @@ import static org.forgerock.util.promise.Promises.newExceptionPromise;
  *           "type": "UmaServiceExt",
  *           "config": {
  *               "protectionApiHandler": "ClientHandler",
- *               "authorizationServerUri": "http://openam135.sample.com:8080/openam/",
+ *               "authorizationServerUri": "http://openam51.example.com:8282/openam",
  *               "realm": "/employees",
  *               "clientId": "OpenIG_RS",
  *               "clientSecret": "password",
@@ -112,10 +112,10 @@ public class UmaSharingServiceExt {
      * Constructs an UmaSharingService bound to the given {@code authorizationServer} and dedicated to protect resource
      * sets described by the given {@code templates}.
      *
-     * @param protectionApiHandler used to call the resource set endpoint
-     * @param authorizationServerURI  Bound UMA Authorization Server
-     * @param clientId             OAuth 2.0 Client identifier
-     * @param clientSecret         OAuth 2.0 Client secret
+     * @param protectionApiHandler   used to call the resource set endpoint
+     * @param authorizationServerURI Bound UMA Authorization Server
+     * @param clientId               OAuth 2.0 Client identifier
+     * @param clientSecret           OAuth 2.0 Client secret
      * @throws URISyntaxException when the authorization server URI cannot be "normalized" (trailing '/' append if required)
      */
     public UmaSharingServiceExt(final Handler protectionApiHandler,
@@ -127,6 +127,7 @@ public class UmaSharingServiceExt {
             throws URISyntaxException {
         this.protectionApiHandler = protectionApiHandler;
         this.authorizationServer = appendTrailingSlash(authorizationServerURI);
+        // TODO Should find theses values looking at the .well-known/uma-configuration endpoint
 
         this.realm = realm;
         this.introspectionEndpoint = authorizationServer.resolve("oauth2" + realm + "/introspect");
@@ -415,7 +416,7 @@ public class UmaSharingServiceExt {
                 // register admin endpoint
                 Handler httpHandler = newHttpHandler(
                         newCrestApplication(newHandler(new ShareCollectionProviderExt(service)),
-                                "frapi:openig:uma:share"));
+                                "frapi:openig:uma:shareExt"));
                 EndpointRegistry.Registration share = endpointRegistry().register("share", httpHandler);
                 logger.info("UMA Share endpoint available at '{}'", share.getPath());
 

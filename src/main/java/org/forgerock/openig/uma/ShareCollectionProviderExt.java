@@ -137,6 +137,8 @@ class ShareCollectionProviderExt implements CollectionResourceProvider {
         if (share == null) {
             return new NotFoundException(format("Share %s is unknown", resourceId)).asPromise();
         }
+
+        //TODO Delete from OpenAM too
         return newResultPromise(newResourceResponse(resourceId, null, asJson(share)));
     }
 

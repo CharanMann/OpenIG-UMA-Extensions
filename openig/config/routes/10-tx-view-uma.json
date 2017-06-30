@@ -15,7 +15,7 @@
           "config": {
             "protectionApiHandler": "ClientHandler",
             "umaService": "UmaServiceExt",
-            "scopes" : [
+            "scopes": [
               "http://apis.example.net/scopes/view"
             ]
           }

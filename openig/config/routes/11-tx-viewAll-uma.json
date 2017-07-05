@@ -33,5 +33,5 @@
     "capture": "all"
   },
   "baseURI": "http://apis.example.com:8010/history",
-  "condition": "${matches(request.uri.path, '^/history') and (request.headers['scope'][0] == 'viewAll')}"
+  "condition": "${matches(request.uri.path, '^/history') and (request.headers['action'][0] == 'viewAll')}"
 }

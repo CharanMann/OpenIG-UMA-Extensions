@@ -66,7 +66,7 @@ OpenIG Configuration:
          }
        }
    ```
-   * UmaFilterExt config, we can configure scope required for this filter here:
+   * UmaFilterExt config, we can configure scopes required for this filter here:
    ```
         {
           "type": "UmaFilterExt",
@@ -84,12 +84,12 @@ OpenIG Use Cases testing:
 =========================
 * Share resource: Refer section: [OpenIG-UMA REST endpoints] for details on creating UMA share. <br />
 
-* Access /history/emp1 with scope:view and RPT. Note that userid and scope are optional headers. 'userid' is required only if share URL is not unique among users, in this situation IG will need additional context to find the particular resource. 'scope' is required for IG to locate correct route and is specific to this sample only. 
+* Access /history/emp1 with action:view and RPT. Note that userid and action are optional headers. 'userid' is required only if share URL is not unique among users, in this situation IG will need additional context to find the particular resource. 'action' is required for IG to locate correct route and is specific to this sample only. 
 ```
 curl -X GET \
   http://<OpenIG-Host:Port>/history/emp1 \
   -H 'authorization: Bearer <RPT>' \
-  -H 'scope: view' \
+  -H 'action: view' \
   -H 'userid: tom'
  
 {
@@ -117,12 +117,12 @@ curl -X GET \
 }
 ```
 
-* Access /history/all with scope:viewAll and RPT 
+* Access /history/all with action:viewAll and RPT 
 ```
 curl -X GET \
   http://<OpenIG-Host:Port>/history/emp1 \
   -H 'authorization: Bearer <RPT>' \
-  -H 'scope: viewAll'
+  -H 'action: viewAll'
  
 [
     {
@@ -155,7 +155,7 @@ curl -X POST \
   http://<OpenIG-Host:Port>/openig/api/system/objects/umaserviceext/share \
   -H 'authorization: Bearer <PAT>' \
   -H 'content-type: application/json' \
-  -H 'scope: view' \
+  -H 'action: view' \
   -d '{
 	 "uri" : "/history/emp1",
      "name" : "TxHistory",

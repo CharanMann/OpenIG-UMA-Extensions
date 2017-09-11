@@ -1,6 +1,6 @@
 # OpenIG-UMA-Extensions
 
-Current [OpenIG-UMA has some limitations](https://backstage.forgerock.com/docs/ig/5/gateway-guide#uma-limitations) ; this extension cover some of these limitations. <br />
+[OpenIG-UMA implementation has some limitations](https://backstage.forgerock.com/docs/ig/5/gateway-guide#uma-limitations); this extension cover some of these limitations. <br />
 
 OpenIG UMA Service and Filter Extensions for: <br />
 1. Realm support <br />

@@ -5,7 +5,7 @@ Bob -> AM : Authenticate, get AAT
 AM --> Bob : AAT
 
 Bob -> IG_UMA_RS : Access UMA protected resource
-IG_UMA_RS -> DJ : Locate PAT
+IG_UMA_RS -> DS : Locate PAT
 IG_UMA_RS --> AM : PAT, Scopes
 AM --> IG_UMA_RS :  Permission ticket
 IG_UMA_RS --> Bob : Permission ticket

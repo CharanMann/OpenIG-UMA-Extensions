@@ -82,7 +82,7 @@ OpenIG Configuration:
       
 OpenIG Use Cases testing:
 =========================
-* Share resource: Refer section: [OpenIG-UMA REST endpoints] for details on creating UMA share. <br />
+* Share resource: Refer section: [OpenIG-UMA REST endpoints](https://github.com/CharanMann/OpenIG-UMA-Extensions#openig-use-cases-testing) for details on creating UMA share. <br />
 
 * Access /history/emp1 with action:view and RPT. Note that userid and action are optional headers. 'userid' is required only if share URL is not unique among users, in this situation IG will need additional context to find the particular resource. 'action' is required for IG to locate correct route and is specific to this sample only. 
 ```
@@ -90,7 +90,7 @@ curl -X GET \
   http://<OpenIG-Host:Port>/history/emp1 \
   -H 'authorization: Bearer <RPT>' \
   -H 'action: view' \
-  -H 'userid: tom'
+  -H 'userid: alice'
  
 {
     "id": "emp1",

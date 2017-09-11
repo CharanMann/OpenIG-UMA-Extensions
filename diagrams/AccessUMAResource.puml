@@ -1,0 +1,19 @@
+@startuml
+title __Bob access UMA resource__
+autonumber
+Bob -> AM : Authenticate, get AAT
+AM --> Bob : AAT
+
+Bob -> IG_UMA_RS : Access UMA protected resource
+IG_UMA_RS -> DJ : Locate PAT
+IG_UMA_RS --> AM : PAT, Scopes
+AM --> IG_UMA_RS :  Permission ticket
+IG_UMA_RS --> Bob : Permission ticket
+
+Bob -> AM : Permission ticket, AAT
+AM --> Bob : RPT (Alice need to \n approve access)
+
+Bob -> IG_UMA_RS : Access UMA resource with RPT
+IG_UMA_RS <--> AM : Introspect RPT
+IG_UMA_RS --> Bob : Access to requested resource
+@enduml

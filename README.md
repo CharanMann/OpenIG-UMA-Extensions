@@ -1,6 +1,6 @@
 # OpenIG-UMA-Extensions
 
-Current OpenIG-UMA has some limitations: https://backstage.forgerock.com/docs/ig/5/gateway-guide#uma-limitations ; this extension cover some of these limitations. <br />
+Current [OpenIG-UMA has some limitations](https://backstage.forgerock.com/docs/ig/5/gateway-guide#uma-limitations) ; this extension cover some of these limitations. <br />
 
 OpenIG UMA Service and Filter Extensions for: <br />
 1. Realm support <br />
@@ -18,14 +18,14 @@ Pre-requisites :
 ================
 * Versions used for this project: IG 5.0, AM 5.1, DS 4.0
 1. OpenAM has been installed and configured. Sample routes in this example use OpenAM realm '/employees'. 
-2. OpenAM UMA service has been configured as specified here: https://backstage.forgerock.com/docs/am/5.1/uma-guide
-3. OpenIG has been installed and configured as UMA RS as specified here: https://backstage.forgerock.com/docs/ig/5/gateway-guide#chap-uma  
+2. OpenAM UMA service has been configured as specified [here](https://backstage.forgerock.com/docs/am/5.1/uma-guide)
+3. OpenIG has been installed and configured as UMA RS as specified [here](https://backstage.forgerock.com/docs/ig/5/gateway-guide#chap-uma)  
 4. Maven has been installed and configured.
 
 
 OpenDJ UMA RS store Installation & Configuration:
 =================================================
-1. Install OpenDJ under /opt/opendjrs. Refer https://backstage.forgerock.com/docs/ds/5/install-guide#chap-setup-ds <br />
+1. Install OpenDJ under /opt/opendjrs. Refer [here](https://backstage.forgerock.com/docs/ds/5/install-guide#chap-setup-ds) <br />
    Setup params: <br />
    ============= <br />
    * Root User DN:                  cn=Directory Manager
@@ -82,7 +82,7 @@ OpenIG Configuration:
       
 OpenIG Use Cases testing:
 =========================
-* Share resource: Refer section: [OpenIG-UMA REST endpoints](https://github.com/CharanMann/OpenIG-UMA-Extensions#openig-use-cases-testing) for details on creating UMA share. <br />
+* Share resource: Refer section: [OpenIG-UMA REST endpoints](https://github.com/CharanMann/OpenIG-UMA-Extensions#openig-uma-rest-endpoints) for details on creating UMA share. <br />
 
 * Access /history/emp1 with action:view and RPT. Note that userid and action are optional headers. 'userid' is required only if share URL is not unique among users, in this situation IG will need additional context to find the particular resource. 'action' is required for IG to locate correct route and is specific to this sample only. 
 ```

@@ -7,7 +7,7 @@ AM --> Alice : PAT
 Alice -> IG_UMA_RS : Share UMA resource using PAT
 IG_UMA_RS -> AM : Create UMA resource
 IG_UMA_RS -> DS : Persist UMA resource
-IG_UMA_RS --> Alice : Resource created (Both on AM and D)
+IG_UMA_RS --> Alice : Resource created (Both on AM and DS)
 
 Alice -> IG_UMA_RS : List all UMA resources using PAT
 IG_UMA_RS --> Alice : UMA resources
